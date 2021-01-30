@@ -65,7 +65,7 @@ static const u8 META[] = {
 	128,
 };
 
-static Gamestate splash_screen(void){
+static void splash_screen(void){
 	register u8 x = 32, y = 32;
 	register s16 sin = 0, cos = 0x3FFF;
 	
@@ -74,7 +74,7 @@ static Gamestate splash_screen(void){
 		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP_SPLASH);
 	} px_ppu_sync_enable();
 	
-	music_play(0);
+	// music_play(0);
 	
 	fade_from_black(PALETTE, 4);
 	
@@ -97,7 +97,7 @@ static Gamestate splash_screen(void){
 		px_wait_nmi();
 	}
 	
-	return splash_screen();
+	splash_screen();
 }
 
 void main(void){
@@ -118,8 +118,8 @@ void main(void){
 	// Decompress the tileset into character memory.
 	px_lz4_to_vram(CHR_ADDR(0, 0), CHR0);
 	
-	sound_init(SOUNDS);
-	music_init(MUSIC);
+	sound_init(&SOUNDS);
+	music_init(&MUSIC);
 	
 	// Jump to the splash screen state.
 	splash_screen();

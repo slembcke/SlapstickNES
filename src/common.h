@@ -15,9 +15,9 @@ extern u8 ix, iy, idx, tmp;
 #pragma zpsym("tmp");
 
 // audio.s declarations:
-typedef struct {} AudioChunk;
-extern const AudioChunk MUSIC[];
-extern const AudioChunk SOUNDS[];
+typedef struct AudioChunk AudioChunk;
+extern const AudioChunk MUSIC;
+extern const AudioChunk SOUNDS;
 
 void music_init(const AudioChunk *music);
 void music_play(u8 song);
@@ -40,9 +40,6 @@ enum {
 
 void sound_init(const AudioChunk *sounds);
 void sound_play(u16 sound);
-
-// Handy utils:
-typedef struct {} Gamestate;
 
 typedef struct {
 	u8 value, prev, press, release;

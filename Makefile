@@ -81,7 +81,7 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 	touch $@
 
 %.bin: %.tmx
-	python $(PX_TOOLS_PATH)/tmx2bin.py $< > $@
+	python2 $(PX_TOOLS_PATH)/tmx2bin.py $< > $@
 
 %.lz4: %.bin px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
