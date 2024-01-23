@@ -1,4 +1,4 @@
-# GGJ20 Template
+# GGJ2X Template
 
 * Includes my "pixler" C library which provides:
 	* Coroutines
