@@ -80,7 +80,7 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
 
 %.bin: %.tmx
-	python2 $(PX_TOOLS_PATH)/tmx2bin.py $< > $@
+	python $(PX_TOOLS_PATH)/tmx2bin.py $< $@
 
 %.lz4: %.bin px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
@@ -103,6 +103,7 @@ audio/audio.o: $(SONGS:.txt=.s) audio/sounds.s
 
 clean:
 	-rm $(OBJS) $(CHR:.png=.chr) $(CHR:.png=.lz4)
+	-rm map/splash.bin map/splash.lz4
 	-rm $(SONGS:.txt=.s)
 	-rm px-tools
 	make -C $(PX_TOOLS_PATH) clean
