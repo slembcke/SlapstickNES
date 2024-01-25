@@ -10,7 +10,8 @@ clean:
 
 slib.o: slib.h
 
-LDFLAGS=-lpng -lz -static
+LDFLAGS = -lpng
+# LDFLAGS += -lz -static
 png2chr: png2chr.o slib.o shared.o
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
