@@ -17,10 +17,10 @@ static void tile_to_chr(const u8 *pixels, uint stride, u8 tile[]){
 int main(int argc, char **argv){
 	SLIB_ASSERT_HARD(argc == 3, "Usage: %s infile outfile", argv[0]);
 	
-	FILE *infile = fopen(argv[1], "r");
+	FILE *infile = fopen(argv[1], "rb");
 	SLIB_ASSERT_HARD(infile, "Can't open input file '%s'", argv[1]);
 	
-	FILE *outfile = fopen(argv[2], "w");
+	FILE *outfile = fopen(argv[2], "wb");
 	SLIB_ASSERT_HARD(outfile, "Can't open output file '%s'", argv[2]);
 	
 	Image image = read_png(infile);

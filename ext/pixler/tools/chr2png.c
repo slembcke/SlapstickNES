@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include <png.h>
 
@@ -25,10 +25,10 @@ static u64 bytes_to_row(u8 byte0, u8 byte1){
 int main(int argc, char *argv[]){
 	SLIB_ASSERT_HARD(argc == 4, "Usage: %s palette infile.chr outfile.png", argv[0]);
 	
-	FILE *infile = fopen(argv[2], "r");
+	FILE *infile = fopen(argv[2], "rb");
 	SLIB_ASSERT_HARD(infile, "Can't open input file '%s'.", argv[2]);
 	
-	FILE *outfile = fopen(argv[3], "w");
+	FILE *outfile = fopen(argv[3], "wb");
 	SLIB_ASSERT_HARD(outfile, "Can't open output file '%s'", argv[3]);
 	
 	fseek(infile, 0, SEEK_END);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
 	png_set_packing(png_ptr);
 	
 	u8 *pixels = malloc(w*h);
-	bzero(pixels, w*h);
+	memset(pixels, 0, w*h);
 	
 	for(uint i = 0; i < tile_count; i++){
 		const u8 *tile_data = chr_data + 16*i;

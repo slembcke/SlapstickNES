@@ -49,4 +49,4 @@ extern Gamepad pad1, pad2;
 void read_gamepads(void);
 void wait_noinput(void);
 
-#endif _COMMON_H
+#endif

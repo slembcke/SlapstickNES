@@ -7,12 +7,6 @@ Written and placed in the public domain by Ilya Muravyov
 */
 
 #ifndef _MSC_VER
-#  define _FILE_OFFSET_BITS 64
-
-#  define _fseeki64 fseeko
-#  define _ftelli64 ftello
-#  define _stati64 stat
-
 #  define __min(a, b) ((a)<(b)?(a):(b))
 #  define __max(a, b) ((a)>(b)?(a):(b))
 #endif
@@ -88,9 +82,9 @@ void compress(const int max_chain)
   fwrite(&magic, 1, sizeof(magic), fout);
 #endif
 
-  _fseeki64(fin, 0, SEEK_END);
-  const long long flen=_ftelli64(fin);
-  _fseeki64(fin, 0, SEEK_SET);
+  fseeko(fin, 0, SEEK_END);
+  const long long flen=ftello(fin);
+  fseeko(fin, 0, SEEK_SET);
 
   int n;
   while ((n=fread(buf, 1, BLOCK_SIZE, fin))>0)
@@ -216,7 +210,7 @@ void compress(const int max_chain)
     fwrite(&buf[BLOCK_SIZE], 1, bsize, fout);
 
     if (flen>0)
-      fprintf(stderr, "%3d%%\r", int((_ftelli64(fin)*100)/flen));
+      fprintf(stderr, "%3d%%\r", int((ftello(fin)*100)/flen));
   }
 }
 
@@ -237,9 +231,9 @@ void compress_optimal()
   fwrite(&magic, 1, sizeof(magic), fout);
 #endif
 
-  _fseeki64(fin, 0, SEEK_END);
-  const long long flen=_ftelli64(fin);
-  _fseeki64(fin, 0, SEEK_SET);
+  fseeko(fin, 0, SEEK_END);
+  const long long flen=ftello(fin);
+  fseeko(fin, 0, SEEK_SET);
 
   int n;
   while ((n=fread(buf, 1, BLOCK_SIZE, fin))>0)
@@ -439,7 +433,7 @@ void compress_optimal()
     fwrite(&buf[BLOCK_SIZE], 1, bsize, fout);
 
     if (flen>0)
-      fprintf(stderr, "%3d%%\r", int((_ftelli64(fin)*100)/flen));
+      fprintf(stderr, "%3d%%\r", int((ftello(fin)*100)/flen));
   }
 }
 
@@ -662,15 +656,15 @@ int main(int argc, char** argv)
       compress(level==8?WSIZE:1<<level);
   }
 
-  fprintf(stderr, "%" PRId64 " -> %" PRId64 " in %1.2fs\n", _ftelli64(fin), _ftelli64(fout),
+  fprintf(stderr, "%" PRId64 " -> %" PRId64 " in %1.2fs\n", ftello(fin), ftello(fout),
       double(clock()-start)/CLOCKS_PER_SEC);
 
   fclose(fin);
   fclose(fout);
 
 #ifndef NO_UTIME
-  struct _stati64 sb;
-  if (_stati64(argv[1], &sb))
+  struct stat sb;
+  if (stat(argv[1], &sb))
   {
     perror("Stat failed");
     exit(1);

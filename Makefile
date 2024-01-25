@@ -1,7 +1,7 @@
 PROJECT_NAME = GGJ2X
 ROM = $(PROJECT_NAME).nes
 
-CC65_ROOT = `pwd`/../cc65
+CC65_ROOT = /home/slembcke/Development/NES/GGJ202X/wintools/cc65
 CC = $(CC65_ROOT)/bin/cc65
 AS = $(CC65_ROOT)/bin/ca65
 LD = $(CC65_ROOT)/bin/ld65
@@ -36,17 +36,17 @@ SONGS = \
 default: $(ROM)
 rom: $(ROM)
 
-PX_TOOLS_PATH = ext/pixler/tools
+PX_TOOLS_PATH = wintools
 PX_LIB_PATH = ext/pixler/lib
 PX_LIB = $(PX_LIB_PATH)/px.lib
 $(PX_LIB):
 	make CC65_ROOT=$(CC65_ROOT) -C $(PX_LIB_PATH)
 
 px-tools:
-	make -C $(PX_TOOLS_PATH)
+#	make -C $(PX_TOOLS_PATH)
 	touch px-tools
 
-FT2_TOOLS_PATH = ext/famitone2
+FT2_TOOLS_PATH = wintools
 ft2-tools:
 	make -C $(FT2_TOOLS_PATH)
 	touch ft2-tools
@@ -78,14 +78,14 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 
 %.lz4: %.chr px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
-	touch $@
+#	touch $@
 
 %.bin: %.tmx
 	python2 $(PX_TOOLS_PATH)/tmx2bin.py $< > $@
 
 %.lz4: %.bin px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
-	touch $@
+#	touch $@
 
 src/data.o: $(CHR:.png=.lz4) map/splash.lz4
 
