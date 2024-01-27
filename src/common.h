@@ -5,7 +5,10 @@
 
 // data.s declarations:
 extern u8 CHR0[];
+extern u8 MOCK[];
+
 extern u8 MAP_SPLASH[];
+extern u8 MAP0[];
 
 // misc.s declarations:
 extern u8 ix, iy, idx, tmp;

@@ -29,6 +29,7 @@ OBJS = \
 
 CHR = \
 	chr/0.png \
+	chr/mockup.png \
 
 SONGS = \
 	audio/after_the_rain.txt \
@@ -55,7 +56,7 @@ run-mac: rom
 	open -a Nestopia $(ROM)
 
 run-linux: rom
-	mesen $(ROM)
+	~/Applications/Mesen $(ROM)
 #	nestopia -w -l 1 -n -s 2 -t $(ROM)
 
 run-win: rom
@@ -78,20 +79,22 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 
 %.lz4: %.chr px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
+	touch $@
 
 %.bin: %.tmx
 	python $(PX_TOOLS_PATH)/tmx2bin.py $< $@
 
 %.lz4: %.bin px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
+	touch $@
 
-src/data.o: $(CHR:.png=.lz4) map/splash.lz4
+src/data.o: $(CHR:.png=.lz4) map/splash.lz4 map/map0.lz4
 
-tiles: chr/0.chr
-	$(PX_TOOLS_PATH)/chr2png "1D 00 10 20" chr/0.chr chr/0-pal0.png
-	$(PX_TOOLS_PATH)/chr2png "1D 06 16 26" chr/0.chr chr/0-pal1.png
-	$(PX_TOOLS_PATH)/chr2png "1D 09 19 29" chr/0.chr chr/0-pal2.png
-	$(PX_TOOLS_PATH)/chr2png "1D 01 11 21" chr/0.chr chr/0-pal3.png
+tiles: chr/mockup.chr
+	$(PX_TOOLS_PATH)/chr2png "1D 0A 1B 05" $< $(<:.chr=-pal0.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 1C 2C 05" $< $(<:.chr=-pal1.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 05 05 05" $< $(<:.chr=-pal2.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 05 05 05" $< $(<:.chr=-pal3.png)
 
 audio/sounds.s: audio/sounds.nsf ft2-tools
 	$(FT2_TOOLS_PATH)/nsf2data $< -ca65 -ntsc

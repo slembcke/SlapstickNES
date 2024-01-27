@@ -58,10 +58,12 @@ void fade_from_black(const u8* palette, u8 delay){
 
 void meta_spr(u8 x, u8 y, u8 pal, const u8* data);
 static const u8 META[] = {
-	-8, -8, 0xD0, 0,
-	 0, -8, 0xD1, 0,
-	-8,  0, 0xD2, 0,
-	 0,  0, 0xD3, 0,
+	-8, -8, 0xE0, 0,
+	 0, -8, 0xE1, 0,
+	-8,  0, 0xE2, 0,
+	 0,  0, 0xE3, 0,
+	-8,  8, 0xE2, 0,
+	 0,  8, 0xE3, 0,
 	128,
 };
 
@@ -71,7 +73,7 @@ static void splash_screen(void){
 	
 	px_ppu_sync_disable();{
 		// Load the splash tilemap into nametable 0.
-		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP_SPLASH);
+		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP0);
 	} px_ppu_sync_enable();
 	
 	// music_play(0);
@@ -89,9 +91,9 @@ static void splash_screen(void){
 		// Draw a sprite.
 		meta_spr(x, y, 2, META);
 		
-		PX.scroll_y = 480 + (sin >> 9);
-		sin += cos >> 6;
-		cos -= sin >> 6;
+		// PX.scroll_y = 480 + (sin >> 9);
+		// sin += cos >> 6;
+		// cos -= sin >> 6;
 		
 		px_spr_end();
 		px_wait_nmi();
@@ -106,7 +108,7 @@ void main(void){
 	
 	// Set which tiles to use for the background and sprites.
 	px_bg_table(0);
-	px_spr_table(0);
+	px_spr_table(1);
 	
 	// Not using bank switching, but a good idea to set a reliable value at boot.
 	px_uxrom_select(0);
@@ -116,7 +118,8 @@ void main(void){
 	px_wait_nmi();
 	
 	// Decompress the tileset into character memory.
-	px_lz4_to_vram(CHR_ADDR(0, 0), CHR0);
+	px_lz4_to_vram(CHR_ADDR(0, 0), MOCK);
+	px_lz4_to_vram(CHR_ADDR(1, 0), CHR0);
 	
 	sound_init(&SOUNDS);
 	music_init(&MUSIC);
