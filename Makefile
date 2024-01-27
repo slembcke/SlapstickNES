@@ -1,7 +1,7 @@
 PROJECT_NAME = GGJ2X
 ROM = $(PROJECT_NAME).nes
 
-CC65_ROOT = $(PWD)/../cc65
+CC65_ROOT = "C:/Users/Mycroft/Desktop/GGJ202X/wintools/cc65"
 CC = $(CC65_ROOT)/bin/cc65
 AS = $(CC65_ROOT)/bin/ca65
 LD = $(CC65_ROOT)/bin/ld65
@@ -29,6 +29,7 @@ OBJS = \
 
 CHR = \
 	chr/0.png \
+	chr/smchr.png \
 
 SONGS = \
 	audio/after_the_rain.txt \
@@ -36,19 +37,19 @@ SONGS = \
 default: $(ROM)
 rom: $(ROM)
 
-PX_TOOLS_PATH = ext/pixler/tools
+PX_TOOLS_PATH = "C:/Users/Mycroft/Desktop/GGJ202X/wintools"
 PX_LIB_PATH = ext/pixler/lib
 PX_LIB = $(PX_LIB_PATH)/px.lib
 $(PX_LIB):
-	make CC65_ROOT=$(CC65_ROOT) -C $(PX_LIB_PATH)
+	wintools/make CC65_ROOT=$(CC65_ROOT) -C $(PX_LIB_PATH)
 
 px-tools:
-	make -C $(PX_TOOLS_PATH)
+	# wintools/make -C $(PX_TOOLS_PATH)
 	touch px-tools
 
-FT2_TOOLS_PATH = ext/famitone2
+FT2_TOOLS_PATH = "C:/Users/Mycroft/Desktop/GGJ202X/wintools"
 ft2-tools:
-	make -C $(FT2_TOOLS_PATH)
+	# wintools/make -C $(FT2_TOOLS_PATH)
 	touch ft2-tools
 
 run-mac: rom
@@ -59,7 +60,7 @@ run-linux: rom
 #	nestopia -w -l 1 -n -s 2 -t $(ROM)
 
 run-win: rom
-	../Mesen/Mesen.exe $(ROM)
+	wintools/Mesen.exe $(ROM)
 
 $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 	$(LD) -C ld65.cfg --dbgfile $(ROM:.nes=.dbg) $(OBJS) $(PX_LIB) nes.lib -m link.log -o $@
