@@ -7,8 +7,7 @@
 
 .rodata
 
-inclz4 _CHR0, "chr/0.lz4"
-inclz4 _MOCK, "chr/mockup.lz4"
+inclz4 _CHRBG, "chr/bgchr.lz4"
 inclz4 _CHRSM, "chr/smchr.lz4"
 
 inclz4 _MAP_SPLASH, "map/splash.lz4"

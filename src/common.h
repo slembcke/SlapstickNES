@@ -4,8 +4,7 @@
 #include "pixler.h"
 
 // data.s declarations:
-extern u8 CHR0[];
-extern u8 MOCK[];
+extern u8 CHRBG[];
 extern u8 CHRSM[];
 
 extern u8 MAP_SPLASH[];

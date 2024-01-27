@@ -4,14 +4,14 @@
 #include "pixler.h"
 #include "common.h"
 
-#define BG_COLOR 0x31
+#define BG_COLOR 0x1D
 static const u8 PALETTE[] = {
 	BG_COLOR, 0x00, 0x10, 0x20,
-	BG_COLOR, 0x06, 0x16, 0x26,
+	BG_COLOR, 0x27, 0x37, 0x20,
 	BG_COLOR, 0x09, 0x19, 0x29,
 	BG_COLOR, 0x01, 0x11, 0x21,
 	
-	BG_COLOR, 0x00, 0x10, 0x20,
+	BG_COLOR, 0x10, 0x20, 0x30,
 	BG_COLOR, 0x06, 0x16, 0x26,
 	BG_COLOR, 0x09, 0x19, 0x29,
 	BG_COLOR, 0x01, 0x11, 0x21,
@@ -445,7 +445,7 @@ void main(void){
 	px_wait_nmi();
 	
 	// Decompress the tileset into character memory.
-	px_lz4_to_vram(CHR_ADDR(0, 0), MOCK);
+	px_lz4_to_vram(CHR_ADDR(0, 0), CHRBG);
 	px_lz4_to_vram(CHR_ADDR(1, 0), CHRSM);
 
 	sound_init(&SOUNDS);
