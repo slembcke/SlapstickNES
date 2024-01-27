@@ -144,6 +144,7 @@ static const u8 META_L1[] = {
 	-8,  0, 0xF1, PX_SPR_FLIPX,
 	128,
 };
+
 static const u8 META_L2[] = {
 	// HEAD
 	 0, -16, 0xD0, PX_SPR_FLIPX,
@@ -240,6 +241,12 @@ static const u8* anim_walk_left_throwing[] = {
 	META_L2_THROWING,
 };
 
+enum {
+	items_hammer,
+	items_pie,
+	items_banana,
+	items_bomb,
+};
 
 static const u8 HAMMER_UP[] = {
 	 0, 0, 0xB0, 0,
@@ -268,7 +275,7 @@ static const u8 BANANA_THROW[] = {
 
 static u8 pickupsX[4];
 static u8 pickupsY[4];
-static u8 pickupsType[4];
+static u8 pickupsT[4];
 
 static void splash_screen(void){
 	register u8 x = 32, y = 32;
@@ -278,11 +285,11 @@ static void splash_screen(void){
 	bool P1holding = false;
 	bool P1throw = false;
 	u8 throwFrameTimer = 24;
-	bool P1item = false;
+	u8 P1item = 0;
 
 	pickupsX[0] = 64;
 	pickupsY[0] = 128;
-	pickupsType[0] = 0;
+	pickupsT[0] = items_pie;
 
 	px_ppu_sync_disable();{
 		// Load the splash tilemap into nametable 0.
@@ -301,8 +308,8 @@ static void splash_screen(void){
 			throwFrameTimer -= 1;
 			if (throwFrameTimer == 1) {
 				throwFrameTimer = 24;
-				P1throw = false;		
-				P1holding = false;
+				P1throw = false; 
+				P1holding = false;  
 			}	
 		}
 
@@ -310,25 +317,39 @@ static void splash_screen(void){
 		if(JOY_RIGHT(pad1.value)) { x += 1; P1walking = true; P1walkRight = true; }
 		if(JOY_DOWN (pad1.value)) { y += 1; P1walking = true; }
 		if(JOY_UP   (pad1.value)) { y -= 1; P1walking = true; }
-		if(JOY_BTN_A(pad1.press)) { sound_play(SOUND_JUMP); P1throw = true; }
-		// if(JOY_BTN_B(pad1.press)) sound_play(SOUND_JUMP);
-
-		
+		if(JOY_BTN_A(pad1.press)) { if (P1holding) { P1throw = true; sound_play(SOUND_JUMP); }}
+		if(JOY_BTN_B(pad1.press)) { if (!P1holding) { sound_play(SOUND_JUMP); }}
 
 		if (P1throw) {
 			if (P1walkRight) {
-				meta_spr(x+8, y-8, 2, HAMMER_THROW);
+				switch (P1item) {
+					case items_hammer: 	meta_spr(x+8, y-8, 2, HAMMER_THROW); break;
+					case items_pie: 	meta_spr(x+8, y-8, 2, PIE_THROW); break;
+					case items_banana: 	meta_spr(x+8, y-8, 2, BANANA_THROW); break;
+				}
 			}
 			else {
-				meta_spr(x-16, y-8, 2|PX_SPR_FLIPX, HAMMER_THROW);
+				switch (P1item) {
+					case items_hammer: 	meta_spr(x-16, y-8, 2|PX_SPR_FLIPX, HAMMER_THROW); break;
+					case items_pie: 	meta_spr(x-16, y-8, 2|PX_SPR_FLIPX, PIE_THROW); break;
+					case items_banana: 	meta_spr(x-16, y-8, 2|PX_SPR_FLIPX, BANANA_THROW); break;
+				}
 			}
 		} 
 		else if (P1holding) {
 			if (P1walkRight) {
-				meta_spr(x-8, y-24, 2, HAMMER_UP);
+				switch (P1item) {
+					case items_hammer: 	meta_spr(x-8, y-24, 2, HAMMER_UP); break;
+					case items_pie: 	meta_spr(x-8, y-24, 2, PIE_UP); break;
+					case items_banana: 	meta_spr(x-8, y-24, 2, BANANA_UP); break;
+				}
 			}
 			else {
-				meta_spr(x, y-24, 2, HAMMER_UP);
+				switch (P1item) {
+					case items_hammer: 	meta_spr(x, y-24, 2|PX_SPR_FLIPX, HAMMER_UP); break;
+					case items_pie: 	meta_spr(x, y-24, 2|PX_SPR_FLIPX, PIE_UP); break;
+					case items_banana: 	meta_spr(x, y-24, 2|PX_SPR_FLIPX, BANANA_UP); break;
+				}
 			}
 		}
 
@@ -389,9 +410,16 @@ static void splash_screen(void){
 			if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8) {
 				pickupsX[idx] = -8;
 				pickupsY[idx] = -8;
+				P1item = pickupsT[idx];
 				P1holding = true;
 			}
-			meta_spr(pickupsX[idx],pickupsY[idx],0,HAMMER_UP);
+			switch (pickupsT[idx]) {
+				case items_hammer : meta_spr(pickupsX[idx],pickupsY[idx],0,HAMMER_UP); break;
+				case items_pie : meta_spr(pickupsX[idx],pickupsY[idx],0,PIE_UP); break;
+				case items_banana : meta_spr(pickupsX[idx],pickupsY[idx],0,BANANA_UP); break;
+				//case items_bomb : meta_spr(pickupsX[idx],pickupsY[idx],0,BOMB_UP); break;
+			}
+			
 		}
 		
 		px_spr_end();
