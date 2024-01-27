@@ -417,7 +417,7 @@ void main(void){
 	px_wait_nmi();
 	
 	// Decompress the tileset into character memory.
-	px_lz4_to_vram(CHR_ADDR(0, 0), MOCK);
+	px_lz4_to_vram(CHR_ADDR(0, 0), CHRBG);
 	px_lz4_to_vram(CHR_ADDR(1, 0), CHRSM);
 
 	sound_init(&SOUNDS);

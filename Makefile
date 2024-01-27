@@ -28,8 +28,7 @@ OBJS = \
 	$(ASM:.s=.o) \
 
 CHR = \
-	chr/0.png \
-	chr/mockup.png \
+	chr/bgchr.png \
 	chr/smchr.png \
 
 SONGS = \
@@ -90,7 +89,7 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 
 src/data.o: $(CHR:.png=.lz4) map/splash.lz4 map/map0.lz4
 
-tiles: chr/mockup.chr
+tiles: chr/bgchr.chr
 	$(PX_TOOLS_PATH)/chr2png "1D 00 10 20" $< $(<:.chr=-pal0.png)
 	$(PX_TOOLS_PATH)/chr2png "1D 27 37 20" $< $(<:.chr=-pal1.png)
 	$(PX_TOOLS_PATH)/chr2png "1D 05 05 05" $< $(<:.chr=-pal2.png)
