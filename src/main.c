@@ -128,7 +128,7 @@ static void splash_screen(void){
 
 	px_ppu_sync_disable();{
 		// Load the splash tilemap into nametable 0.
-		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP_SPLASH);
+		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP0);
 	} px_ppu_sync_enable();
 	
 	// music_play(0);
@@ -166,10 +166,6 @@ static void splash_screen(void){
 		meta_spr(16, 16, 2, HAMMER_UP);
 		meta_spr(32, 16, 2, PIE_UP);
 		meta_spr(48, 16, 2, BANANA_UP);
-
-		PX.scroll_y = 480 + (sin >> 9);
-		sin += cos >> 6;
-		cos -= sin >> 6;
 		
 		px_spr_end();
 		px_wait_nmi();
@@ -194,7 +190,7 @@ void main(void){
 	px_wait_nmi();
 	
 	// Decompress the tileset into character memory.
-	px_lz4_to_vram(CHR_ADDR(0, 0), CHR0);
+	px_lz4_to_vram(CHR_ADDR(0, 0), MOCK);
 	px_lz4_to_vram(CHR_ADDR(1, 0), CHRSM);
 
 	sound_init(&SOUNDS);
