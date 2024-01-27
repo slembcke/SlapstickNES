@@ -270,9 +270,8 @@ static u8 pickupsX[4];
 static u8 pickupsY[4];
 static u8 pickupsType[4];
 
-static void splash_screen(void){
+static void game_loop(void){
 	register u8 x = 32, y = 32;
-	register s16 sin = 0, cos = 0x3FFF;
 	bool P1walking = false;
 	bool P1walkRight = true;
 	bool P1holding = false;
@@ -285,13 +284,14 @@ static void splash_screen(void){
 	pickupsType[0] = 0;
 
 	px_ppu_sync_disable();{
-		// Load the splash tilemap into nametable 0.
+		// load the palettes
+		px_addr(PAL_ADDR);
+		px_blit(sizeof(PALETTE), PALETTE);
+		
+		// load the tilemaps
 		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP0);
+		px_lz4_to_vram(NT_ADDR(1, 0, 0), MAP1);
 	} px_ppu_sync_enable();
-	
-	// music_play(0);
-	
-	fade_from_black(PALETTE, 4);
 	
 	while(true){
 		read_gamepads();
@@ -398,7 +398,7 @@ static void splash_screen(void){
 		px_wait_nmi();
 	}
 	
-	splash_screen();
+	game_loop();
 }
 
 void main(void){
@@ -424,5 +424,5 @@ void main(void){
 	music_init(&MUSIC);
 	
 	// Jump to the splash screen state.
-	splash_screen();
+	game_loop();
 }
