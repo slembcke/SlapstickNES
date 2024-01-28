@@ -6,15 +6,15 @@
 
 #define BG_COLOR 0x1D
 static const u8 PALETTE[] = {
-	BG_COLOR, 0x14, 0x24, 0x35,
+	BG_COLOR, 0x13, 0x22, 0x33,
 	BG_COLOR, 0x16, 0x27, 0x20,
 	BG_COLOR, 0x16, 0x27, 0x20,
 	BG_COLOR, 0x01, 0x11, 0x21,
-	
+
 	BG_COLOR, 0x18, 0x28, 0x38, // P1, BANANA
 	BG_COLOR, 0x3d, 0x27, 0x30, // HAMMER, PIE, BOMB
 	BG_COLOR, 0x1c, 0x2c, 0x3c,	// P2,
-	BG_COLOR, 0x01, 0x11, 0x21, 
+	BG_COLOR, 0x01, 0x11, 0x21,
 };
 
 Gamepad pad1, pad2;
@@ -24,7 +24,7 @@ void read_gamepads(void){
 	pad1.value = joy_read(0);
 	pad1.press = pad1.value & (pad1.value ^ pad1.prev);
 	pad1.release = pad1.prev & (pad1.value ^ pad1.prev);
-	
+
 	pad2.prev = pad2.value;
 	pad2.value = joy_read(1);
 	pad2.press = pad2.value & (pad2.value ^ pad2.prev);
@@ -378,7 +378,7 @@ static u8 smileShown = 0; // 0 = frown, 1 = grin
 static void tick_player(){
 	static u8 player_flags, behind;
 	static u16 x, y;
-	
+
 	behind = 0;
 	player_flags = player->palette;
 
@@ -388,22 +388,26 @@ static void tick_player(){
 	if(player->y > 196) player->y = 196;
 
 	if(smileScore < 128 || bossStage < 2){
+		// Knock the player back from the clown during the slapstick phase
 		if(player->x > 0xCC && 0x48 < player->y && player->y < 0xA0){
 			player->x -= 16;
 		}
 	} else {
-		if(0x4E < player->y && player->y < 0xA2){
+		if((0x4E < player->y && player->y < 0xA2) || bossStage >= 3){
 			if(player->x > 0xCC){
+				// Check if the player should be behind the mouth
 				if(player->x < 0x118){
 					behind = PX_SPR_BEHIND;
 					player_flags |= PX_SPR_BEHIND;
 				}
 
+				// line up the player with the mouth
 				if(player->x > 256) player->y = 0x90;
 				if(player->y < 0x90) player->y += 1;
 				if(player->y > 0x90) player->y -= 1;
 			}
 		} else {
+			// Clamp to right edge
 			if(player->x > 220){
 				player->x = 220;
 			}
@@ -411,7 +415,7 @@ static void tick_player(){
 	}
 
 	x = (u16)player->x - PX.scroll_x, y = player->y;
-	
+
 	if (player->throw) {
 		player->throwFrameTimer -= 1;
 		if (player->throwFrameTimer == 0) {
@@ -419,7 +423,7 @@ static void tick_player(){
 			player->throw = false;
 			player->holding = false;
 			player->item = items_none;
-		}	
+		}
 	}
 
 	if (player->hammerHitTimer > 1) {
@@ -429,11 +433,11 @@ static void tick_player(){
 			player->palette = player->palette_base;
 		}
 	}
-	
+
 	if (player->throw) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x+8, y-8, pickupsP[1], 0xB1); break;
+				case items_hammer: 	px_spr(x+8, y-8, behind|pickupsP[1], 0xB1); break;
 				case items_pie: 	px_spr(x+8, y-8, pickupsP[2], 0xC1); break;
 				case items_banana: 	px_spr(x+8, y-8, pickupsP[3], 0xB3); break;
 				case items_bomb: 	meta_spr(x+8, y-8, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -441,17 +445,17 @@ static void tick_player(){
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-16, y-8, pickupsP[1]|PX_SPR_FLIPX, 0xB1); break;
+				case items_hammer: 	px_spr(x-16, y-8, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB1); break;
 				case items_pie: 	px_spr(x-16, y-8, pickupsP[2]|PX_SPR_FLIPX, 0xC1); break;
 				case items_banana: 	px_spr(x-16, y-8, pickupsP[3]|PX_SPR_FLIPX, 0xB3); break;
 				case items_bomb: 	meta_spr(x-16, y-8, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
 			}
 		}
-	} 
+	}
 	else if (player->holding) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-8, y-24, pickupsP[1], 0xB0); break;
+				case items_hammer: 	px_spr(x-8, y-24, behind|pickupsP[1], 0xB0); break;
 				case items_pie: 	px_spr(x-8, y-24, pickupsP[2], 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, pickupsP[3], 0xB2); break;
 				case items_bomb: 	meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -459,7 +463,7 @@ static void tick_player(){
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x, y-24, pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
+				case items_hammer: 	px_spr(x, y-24, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
 				case items_pie: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xC0); break;
 				case items_banana: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xB2); break;
 				case items_bomb: 	meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -516,8 +520,8 @@ static void tick_player(){
 			}
 		}
 	}
-	
-	
+
+
 	for (idx = 1; idx < 5; idx++) {
 		if (pickupsR[idx] > 1) {
 			pickupsR[idx] -= 1;
@@ -533,20 +537,13 @@ static void tick_player(){
 				}
 			}
 		}
-		
+
 		if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
 			pickupsX[idx] = -8;
 			pickupsY[idx] = -8;
 			pickupsR[idx] = 100;
 			player->item = pickupsT[idx];
 			player->holding = true;
-		}
-
-		switch (pickupsT[idx]) {
-			case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
-			case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
-			case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
-			case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
 		}
 	}
 
@@ -557,16 +554,16 @@ static void tick_player(){
 
 static void handle_input(){
 	read_gamepads();
-	
+
 	P1.walking = false;
 	P2.walking = false;
-	
-	if(JOY_LEFT (pad1.value)) { P1.x -= 1; P1.walking = true; P1.walkRight = false; } 
+
+	if(JOY_LEFT (pad1.value)) { P1.x -= 1; P1.walking = true; P1.walkRight = false; }
 	if(JOY_RIGHT(pad1.value)) { P1.x += 1; P1.walking = true; P1.walkRight = true; }
 	if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
 	if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
-	if(JOY_BTN_A(pad1.press)) { 
-		if (P1.holding) { 
+	if(JOY_BTN_A(pad1.press)) {
+		if (P1.holding) {
 			P1.throw = true;
 			if (P1.item == items_hammer) {
 				if (abs((s16)P1.x-(s16)P2.x) <= 24 && abs((s16)P1.y-(s16)P2.y) <= 24) {
@@ -582,13 +579,13 @@ static void handle_input(){
 		}
 	}
 	if(JOY_BTN_B(pad1.press)) { if (!P1.holding) { sound_play(SOUND_JUMP); }}
-	
-	if(JOY_LEFT (pad2.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; } 
+
+	if(JOY_LEFT (pad2.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; }
 	if(JOY_RIGHT(pad2.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
 	if(JOY_DOWN (pad2.value)) { P2.y += 1; P2.walking = true; }
 	if(JOY_UP   (pad2.value)) { P2.y -= 1; P2.walking = true; }
-	if(JOY_BTN_A(pad2.press)) { 
-		if (P2.holding) { 
+	if(JOY_BTN_A(pad2.press)) {
+		if (P2.holding) {
 			P2.throw = true;
 			if (P2.item == items_hammer) {
 				if (abs((s16)P2.x-(s16)P1.x) <= 24 && abs((s16)P2.y-(s16)P1.y) <= 24) {
@@ -657,15 +654,55 @@ static const u8 SMILE_BROKEN[] = {
 };
 
 static void show_smile_and_sync(const u8* smile){
-	px_buffer_blit(0x21BB, smile + 0x00, 2);
-	px_buffer_blit(0x21DB, smile + 0x02, 2);
-	px_buffer_blit(0x21FA, smile + 0x04, 4);
-	px_buffer_blit(0x221A, smile + 0x08, 4);
-	px_buffer_blit(0x223A, smile + 0x0C, 4);
-	px_buffer_blit(0x225A, smile + 0x10, 4);
-	px_buffer_blit(0x227A, smile + 0x14, 4);
+	px_buffer_blit(0x21BB, smile +  0, 2);
+	px_buffer_blit(0x21DB, smile +  2, 2);
+	px_buffer_blit(0x21FA, smile +  4, 4);
+	px_buffer_blit(0x221A, smile +  8, 4);
+	px_buffer_blit(0x223A, smile + 12, 4);
+	px_buffer_blit(0x225A, smile + 16, 4);
+	px_buffer_blit(0x227A, smile + 20, 4);
 	px_wait_nmi();
+}
 
+static void deflate_uvula_and_sync(void){
+	static const u8 uvula[] = {
+		0x00, 0x91, 0x00,
+		0xA0, 0xA1, 0xA2,
+		0xB0, 0xB1, 0xB2,
+		0xC0, 0xC1, 0x00,
+		0b01010101,
+	};
+
+	px_buffer_blit(0x25C5, uvula + 0, 3);
+	px_buffer_blit(0x25E5, uvula + 3, 3);
+	px_buffer_blit(0x2605, uvula + 6, 3);
+	px_buffer_blit(0x2625, uvula + 9, 3);
+	px_buffer_blit(0x27D9, uvula + 12, 1);
+	px_buffer_blit(0x27E1, uvula + 12, 1);
+}
+
+static void draw_humor_bar(){
+	// gotta get this done!
+	if(smileScore >= 1*16) px_spr(168 + 0*8, 22, 0, 0xB3);
+	if(smileScore >= 2*16) px_spr(168 + 1*8, 22, 0, 0xB3);
+	if(smileScore >= 3*16) px_spr(168 + 2*8, 22, 0, 0xB3);
+	if(smileScore >= 4*16) px_spr(168 + 3*8, 22, 0, 0xB3);
+	if(smileScore >= 5*16) px_spr(168 + 4*8, 22, 0, 0xB3);
+	if(smileScore >= 6*16) px_spr(168 + 5*8, 22, 0, 0xB3);
+	if(smileScore >= 7*16) px_spr(168 + 6*8, 22, 0, 0xB3);
+	if(smileScore >= 8*16) px_spr(168 + 7*8, 22, 0, 0xB3);
+}
+
+static void draw_hit_bar(){
+	// gotta get this done!
+	if(bossHits < 8*4) px_spr(168 + 0*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 7*4) px_spr(168 + 1*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 6*4) px_spr(168 + 2*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 5*4) px_spr(168 + 3*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 4*4) px_spr(168 + 4*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 3*4) px_spr(168 + 5*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 2*4) px_spr(168 + 6*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 1*4) px_spr(168 + 7*8 - PX.scroll_x, 22, 0, 0xB3);
 }
 
 static void boss_loop(void);
@@ -686,7 +723,7 @@ static void game_loop(void){
 	pickupsY[0] = 0;
 	pickupsP[0] = 0;
 	pickupsR[0] = 0;
-	
+
 	pickupsT[1] = items_hammer;
 	pickupsX[1] = 48;
 	pickupsY[1] = 72;
@@ -722,37 +759,37 @@ static void game_loop(void){
 		// load the palettes
 		px_addr(PAL_ADDR);
 		px_blit(sizeof(PALETTE), PALETTE);
-		
+
 		// load the tilemaps
 		px_lz4_to_vram(NT_ADDR(0, 0, 0), MAP0);
 		px_lz4_to_vram(NT_ADDR(1, 0, 0), MAP1);
 	} px_ppu_sync_enable();
 
 	show_smile_and_sync(SMILE_FROWN);
-	
+
 	while(true){
 		PX.scroll_x = 0;
 		handle_input();
-		
+
 		px_profile_start();
 		player = &P1;
 		tick_player();
-		
+
 		player = &P2;
 		tick_player();
-		px_profile_end();
+		// px_profile_end();
 
 		for (idx = 0; idx < 4; idx++) {
 			if (pickupsR[idx] > 1) {
 				pickupsR[idx] -= 1;
 			}
 			else {
-				if (pickupsR[idx] == 1) {
+				if (pickupsR[idx] <= 1) {
 					pickupsR[idx] = 0;
 					switch (pickupsT[idx]) {
-						case items_hammer: 	pickupsX[idx] = 48; pickupsY[idx] = 72; break;
-						case items_pie: 	pickupsX[idx] = 64; pickupsY[idx] = 72; break;
-						case items_banana: 	pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+						case items_hammer: 	if (player->item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
+						case items_pie: 	if (player->item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
+						case items_banana: 	if (hazardsA[0] == false && player->item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
 						case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
 					}
 				}
@@ -765,13 +802,13 @@ static void game_loop(void){
 				case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
 			}
 		}
-		
-		//meta_spr(200,120,2,anim_AIR_PUFF[px_ticks/10%3]);
+
+		draw_humor_bar();
 
 		px_spr_end();
 		px_wait_nmi();
-		
-		if(JOY_START(pad1.press)) smileScore += 64;
+
+		if(JOY_START(pad1.press)) smileScore += 16;
 		if(smileScore/64 != smileShown){
 			smileShown = smileScore/64;
 			show_smile_and_sync(smileShown == 0 ? SMILE_FROWN : SMILE_GRIN);
@@ -784,7 +821,7 @@ static void game_loop(void){
 			show_smile_and_sync(SMILE_FROWN);
 		}
 	}
-	
+
 	game_loop();
 }
 
@@ -803,7 +840,7 @@ static void player_boss_tick(){
 		if(bossStage < 2 && 0xC0 < player->x && 0x80 < player->y && player->y < 0x94){
 			bossHits++;
 			boss_smack = true;
-		} 
+		}
 		else if(bossStage >= 2 && player->x > 0x11C){
 			bossHits++;
 			boss_smack = true;
@@ -817,26 +854,25 @@ static void boss_loop(){
 	switch(bossStage){
 		case 0: show_smile_and_sync(SMILE_TOOTHY); break;
 		case 1: show_smile_and_sync(SMILE_CRACKED); break;
-		default: show_smile_and_sync(SMILE_BROKEN); break;
+		default: deflate_uvula_and_sync(); // fallthrough
+		case 2: show_smile_and_sync(SMILE_BROKEN); break;
 	}
-	
+
 	while(true){
 		handle_input();
 		boss_smack = false;
 
-		if(bossStage >= 2){
-			if(PX.scroll_x < 88) PX.scroll_x += 2;
-		}
-		
+		if(bossStage >= 2 && PX.scroll_x < 88) PX.scroll_x += 2;
+		if(bossStage >= 3 && PX.scroll_x < 256) PX.scroll_x += 1;
 		frame = px_ticks%96/4;
 		if (frame < 8) {
 			meta_spr(200-PX.scroll_x,120,2,anim_AIR_PUFF[px_ticks/8%3]);
 		}
-		
+
 		player = &P1;
 		tick_player();
 		player_boss_tick();
-		
+
 		if (frame < 8) {
 			switch (px_ticks/8%3) {
 			case 0:
@@ -856,7 +892,7 @@ static void boss_loop(){
 			break;
 			}
 		}
-		
+
 		player = &P2;
 		tick_player();
 		player_boss_tick();
@@ -881,48 +917,47 @@ static void boss_loop(){
 			}
 		}
 
-		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
-		
+		draw_hit_bar();
 		px_spr_end();
 		px_wait_nmi();
-		
+
 		if(boss_smack){
 			px_buffer_set_color(10, 0x06);
-		} else{	
+		} else{
 			px_buffer_set_color(10, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
 		}
-		
-		if(bossHits > 4){
+
+		if(bossHits > 32){
 			bossStage++;
 			break;
 		}
 	}
-	
+
 	px_buffer_set_color(10, PALETTE[10]);
 }
 
 void main(void){
 	// Set up CC65 joystick driver.
 	joy_install(nes_stdjoy_joy);
-	
+
 	// Set which tiles to use for the background and sprites.
 	px_bg_table(0);
 	px_spr_table(1);
-	
+
 	// Not using bank switching, but a good idea to set a reliable value at boot.
 	px_uxrom_select(0);
-	
+
 	// Black out the palette.
 	for(idx = 0; idx < 32; idx++) px_buffer_set_color(idx, 0x1D);
 	px_wait_nmi();
-	
+
 	// Decompress the tileset into character memory.
 	px_lz4_to_vram(CHR_ADDR(0, 0), CHRBG);
 	px_lz4_to_vram(CHR_ADDR(1, 0), CHRSM);
 
 	sound_init(&SOUNDS);
 	music_init(&MUSIC);
-	
+
 	// Jump to the splash screen state.
 	game_loop();
 }
