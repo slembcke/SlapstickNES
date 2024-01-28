@@ -1093,7 +1093,11 @@ static void boss_loop(){
 			break;
 		}
 	}
-
+	
+	P1.item = items_none;
+	P1.holding = false;
+	P2.item = items_none;
+	P2.holding = false;
 	px_buffer_set_color(10, PALETTE[10]);
 }
 
