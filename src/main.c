@@ -441,14 +441,17 @@ static void tick_player(){
 		if (px_ticks/8%18 == 17) {
 			player->holding = true;
 			player->item = items_splosion;
+			player->palette = 3;
+			player->splodedTimer = 128;
+			smileScore += 16;
 
-			if (P1.x+8 > x-8 && P1.y > y-24-16) {
+			if (abs(P1.x-x) < 12 && abs(P1.y-y) < 12) {
 				P1.palette = 3;
 				P1.splodedTimer = 128;
 				smileScore += 16;
 			}
 
-			if (P2.x+8 > x-8 && P2.y > y-24-16) {
+			if (abs(P2.x-x) < 12 && abs(P2.y-y) < 12) {
 				P2.palette = 3;
 				P2.splodedTimer = 128;
 				smileScore += 16;
@@ -680,14 +683,14 @@ static void handle_input(){
 					P1.splodedTimer = 128;
 					smileScore += 16;
 
-					if (P2.x+8 > P1.x-8 && P2.y > P1.y-24-16) {
+					if (abs(P1.x-P2.x) < 12 && abs(P1.y-P2.y) < 12) {
 						P2.palette = 3;
 						P2.splodedTimer = 128;
 						smileScore += 16;
 					}
 					sound_play(SOUND_DROP);
 				}
-				else if(P1.item == items_pie){
+				else if(P1.item == items_pie) {
 						hazardsA[1] = true;
 						hazardsX[1] = P1.x + (P1.walkRight ? 16 : -16);
 						hazardsY[1] = P1.y - 18;
@@ -730,7 +733,7 @@ static void handle_input(){
 					P2.splodedTimer = 128;
 					smileScore += 16;
 
-					if (P1.x+8 > P2.x-8 && P1.y > P2.y-24-16) {
+					if (abs(P2.x-P1.x) < 12 && abs(P2.y-P1.y) < 12) {
 						P1.palette = 3;
 						P1.splodedTimer = 128;
 						smileScore += 16;
