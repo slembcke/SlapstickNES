@@ -45,12 +45,12 @@ $(PX_LIB):
 
 px-tools:
 	# wintools/make -C $(PX_TOOLS_PATH)
-	touch px-tools
+	# touch px-tools
 
 FT2_TOOLS_PATH = "C:/Users/Mycroft/Desktop/GGJ202X/wintools"
 ft2-tools:
 	# wintools/make -C $(FT2_TOOLS_PATH)
-	touch ft2-tools
+	# touch ft2-tools
 
 run-mac: rom
 	open -a Nestopia $(ROM)

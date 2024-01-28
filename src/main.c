@@ -13,7 +13,7 @@ static const u8 PALETTE[] = {
 	
 	BG_COLOR, 0x18, 0x28, 0x38, // P1, BANANA
 	BG_COLOR, 0x3d, 0x17, 0x30, // HAMMER, PIE
-	BG_COLOR, 0x14, 0x24, 0x34,	// P2, BOMB
+	BG_COLOR, 0x1c, 0x2c, 0x3c,	// P2, BOMB
 	BG_COLOR, 0x01, 0x11, 0x21,
 };
 
@@ -283,6 +283,7 @@ typedef struct {
 	bool walking, walkRight;
 	bool holding, throw;
 	u8 throwFrameTimer, item;
+	u8 palette;
 } Player;
 
 static Player P1, P2;
@@ -322,7 +323,7 @@ static void tick_player(){
 		if (player->walkRight) {
 			switch (player->item) {
 				case items_hammer: 	px_spr(x-8, y-24, 1, 0xB0); break;
-				case items_pie: 	px_spr(x-8, y-24, 0, 0xC0); break;
+				case items_pie: 	px_spr(x-8, y-24, 1, 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, 0, 0xB2); break;
 			}
 		}
@@ -339,48 +340,48 @@ static void tick_player(){
 	if (player->walking) {
 		if (player->walkRight) {
 			if (player->throw) {
-				meta_spr(x, y, 0, anim_walk_right_throwing[px_ticks/8%2]);
+				meta_spr(x, y, player->palette, anim_walk_right_throwing[px_ticks/8%2]);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, 0, anim_walk_right_holding[px_ticks/8%2]);
+				meta_spr(x, y, player->palette, anim_walk_right_holding[px_ticks/8%2]);
 			}
 			else {
-				meta_spr(x, y, 0, anim_walk_right[px_ticks/8%2]);
+				meta_spr(x, y, player->palette, anim_walk_right[px_ticks/8%2]);
 			}
 		}
 		else {
 			if (player->throw) {
-				meta_spr(x, y, 0, anim_walk_left_throwing[px_ticks/8%2]);
+				meta_spr(x, y, player->palette, anim_walk_left_throwing[px_ticks/8%2]);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, 0, anim_walk_left_holding[px_ticks/8%2]);
+				meta_spr(x, y, player->palette, anim_walk_left_holding[px_ticks/8%2]);
 			}
 			else {
-				meta_spr(x, y, 0, anim_walk_left[px_ticks/8%2]);
+				meta_spr(x, y, player->palette, anim_walk_left[px_ticks/8%2]);
 			}
 		}
 	}
 	else {
 		if (player->walkRight) {
 			if (player->throw) {
-				meta_spr(x, y, 0, META_R1_THROWING);
+				meta_spr(x, y, player->palette, META_R1_THROWING);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, 0, META_R1_HOLDING);
+				meta_spr(x, y, player->palette, META_R1_HOLDING);
 			}
 			else {
-				meta_spr(x, y, 0, META_R1);
+				meta_spr(x, y, player->palette, META_R1);
 			}
 		}
 		else {
 			if (player->throw) {
-				meta_spr(x, y, 0, META_L1_THROWING);
+				meta_spr(x, y, player->palette, META_L1_THROWING);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, 0, META_L1_HOLDING);
+				meta_spr(x, y, player->palette, META_L1_HOLDING);
 			}
 			else {
-				meta_spr(x, y, 0, META_L1);
+				meta_spr(x, y, player->palette, META_L1);
 			}
 		}
 	}
@@ -444,9 +445,11 @@ static void boss_loop(void);
 static void game_loop(void){
 	P1.x = 32, P1.y = 32;
 	P1.throwFrameTimer = 24;
+	P1.palette = 0;
 
 	P2.x = 64, P2.y = 64;
 	P2.throwFrameTimer = 24;
+	P2.palette = 2;
 
 	pickupsX[0] = 48;
 	pickupsY[0] = 72;
