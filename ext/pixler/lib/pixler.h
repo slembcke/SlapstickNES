@@ -133,7 +133,7 @@ void px_buffer_inc_v(void);
 void px_buffer_data(u8 len, u16 addr);
 
 // Copy memory to the PPU.
-void px_buffer_blit(u16 addr, void *src, u8 len);
+void px_buffer_blit(u16 addr, const void *src, u8 len);
 
 // Add a command to change a PPU palette color.
 void px_buffer_set_color(u8 idx, u8 color);

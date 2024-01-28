@@ -8,7 +8,7 @@
 static const u8 PALETTE[] = {
 	BG_COLOR, 0x01, 0x11, 0x21,
 	BG_COLOR, 0x27, 0x37, 0x20,
-	BG_COLOR, 0x09, 0x19, 0x29,
+	BG_COLOR, 0x27, 0x37, 0x20,
 	BG_COLOR, 0x01, 0x11, 0x21,
 	
 	BG_COLOR, 0x18, 0x28, 0x38, // P1, BANANA
@@ -440,9 +440,64 @@ static void handle_input(){
 	if(JOY_BTN_B(pad2.press)) { if (!P2.holding) { sound_play(SOUND_JUMP); }}
 }
 
+static const u8 SMILE0[] = {
+	      0x9B, 0x9C,
+	      0xAB, 0xAC,
+	0xBA, 0xBB, 0xBC, 0xBD,
+	0xCA, 0xCB, 0xCC, 0xCD,
+	0xDA, 0xDB, 0xDC, 0xDD,
+	0xEA, 0xEB, 0xEC, 0xED,
+	0xFA, 0xFB, 0xFC, 0xFD,
+};
+
+static const u8 SMILE1[] = {
+	      0x9B, 0x9C,
+	      0xAB, 0xAC,
+	0x62, 0x63, 0x64, 0x65,
+	0x72, 0x73, 0x74, 0x75,
+	0x82, 0x83, 0x84, 0x85,
+	0x92, 0x93, 0x94, 0x95,
+	0xA2, 0xA3, 0xA4, 0xA5,
+};
+
+static const u8 SMILE2[] = {
+	      0x60, 0x61,
+	      0x70, 0x71,
+	0x66, 0x67, 0x68, 0x69,
+	0x76, 0x77, 0x78, 0x79,
+	0x86, 0x87, 0x88, 0x89,
+	0x96, 0x97, 0x98, 0x99,
+	0xA6, 0xA7, 0xA8, 0xA9,
+};
+
+static const u8 SMILE3[] = {
+	      0x60, 0x61,
+	      0x70, 0x71,
+	0xB6, 0xB7, 0xB8, 0xB9,
+	0xC6, 0xC7, 0xC8, 0xC9,
+	0xD6, 0xD7, 0xD8, 0xD9,
+	0xE6, 0xE7, 0xE8, 0xE9,
+	0xF6, 0xF7, 0xF8, 0xF9,
+};
+
+static void show_smile_and_sync(const u8* smile){
+	px_buffer_blit(0x21BB, smile + 0x00, 2);
+	px_buffer_blit(0x21DB, smile + 0x02, 2);
+	px_buffer_blit(0x21FA, smile + 0x04, 4);
+	px_buffer_blit(0x221A, smile + 0x08, 4);
+	px_buffer_blit(0x223A, smile + 0x0C, 4);
+	px_buffer_blit(0x225A, smile + 0x10, 4);
+	px_buffer_blit(0x227A, smile + 0x14, 4);
+	px_wait_nmi();
+	
+}
+
 static void boss_loop(void);
 
 static void game_loop(void){
+	static u8 smileScore = 0;
+	static u8 smileShown = 0;
+	
 	P1.x = 32, P1.y = 32;
 	P1.throwFrameTimer = 24;
 	P1.palette = 0;
@@ -474,6 +529,8 @@ static void game_loop(void){
 		px_lz4_to_vram(NT_ADDR(1, 0, 0), MAP1);
 	} px_ppu_sync_enable();
 	
+	show_smile_and_sync(SMILE0);
+	
 	while(true){
 		handle_input();
 		
@@ -488,22 +545,30 @@ static void game_loop(void){
 		px_spr_end();
 		px_wait_nmi();
 		
-		if(JOY_START(pad1.value)) boss_loop();
+		if(JOY_START(pad1.press)) smileScore += 16;
+		if(smileScore/64 != smileShown){
+			smileShown = smileScore/64;
+			show_smile_and_sync(smileShown == 0 ? SMILE0 : SMILE1);
+		}
+		
+		if(smileScore >= 128){
+			boss_loop();
+			
+			smileScore = 0;
+			show_smile_and_sync(SMILE0);
+		}
 	}
 	
 	game_loop();
 }
 
-static const SMILE1[] = {0x1};
-
 static void boss_loop(){
 	static u8 boss_hits;
 	static bool smack;
+	static u8 teeth_shown;
 	
 	boss_hits = 0;
-	
-	px_buffer_blit(0x2A3A, SMILE1, 1);
-	px_wait_nmi();
+	show_smile_and_sync(SMILE2);
 	
 	while(true){
 		handle_input();
@@ -531,17 +596,16 @@ static void boss_loop(){
 		px_wait_nmi();
 		
 		if(smack){
-			px_buffer_set_color(7, 0x06);
+			px_buffer_set_color(10, 0x06);
 		} else{	
-			px_buffer_set_color(7, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
+			px_buffer_set_color(10, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
 		}
 		
 		px_debug_hex((px_ticks & 1) == 0);
 		if(boss_hits > 32) break;
 	}
 	
-	px_buffer_set_color(7, PALETTE[7]);
-	px_wait_nmi();
+	px_buffer_set_color(10, PALETTE[10]);
 }
 
 void main(void){
