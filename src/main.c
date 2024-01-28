@@ -6,7 +6,7 @@
 
 #define BG_COLOR 0x1D
 static const u8 PALETTE[] = {
-	BG_COLOR, 0x00, 0x10, 0x20,
+	BG_COLOR, 0x01, 0x11, 0x21,
 	BG_COLOR, 0x27, 0x37, 0x20,
 	BG_COLOR, 0x09, 0x19, 0x29,
 	BG_COLOR, 0x01, 0x11, 0x21,
@@ -278,14 +278,21 @@ static u8 pickupsY[4];
 static u8 pickupsT[4];
 static u8 pickupsR[4];
 
+typedef struct {
+	u8 x, y;
+	bool walking, walkRight;
+	bool holding, throw;
+	u8 throwFrameTimer, item;
+} Player;
+
+static Player P1, P2;
+
 static void game_loop(void){
-	register u8 x = 32, y = 32;
-	bool P1walking = false;
-	bool P1walkRight = true;
-	bool P1holding = false;
-	bool P1throw = false;
-	u8 throwFrameTimer = 24;
-	u8 P1item = 0;
+	static Player* player;
+	static u8 x, y;
+	
+	P1.x = 32, P1.y = 32;
+	P1.throwFrameTimer = 24;
 
 	pickupsX[0] = 48;
 	pickupsY[0] = 72;
@@ -312,50 +319,54 @@ static void game_loop(void){
 	
 	while(true){
 		read_gamepads();
-		P1walking = false;
+		
+		player = &P1;
+		player->walking = false;
 
-		if (P1throw) {
-			throwFrameTimer -= 1;
-			if (throwFrameTimer == 1) {
-				throwFrameTimer = 24;
-				P1throw = false; 
-				P1holding = false;  
+		if (player->throw) {
+			player->throwFrameTimer -= 1;
+			if (player->throwFrameTimer == 1) {
+				player->throwFrameTimer = 24;
+				player->throw = false;
+				player->holding = false;
 			}	
 		}
 
-		if(JOY_LEFT (pad1.value)) { x -= 1; P1walking = true; P1walkRight = false; } 
-		if(JOY_RIGHT(pad1.value)) { x += 1; P1walking = true; P1walkRight = true; }
-		if(JOY_DOWN (pad1.value)) { y += 1; P1walking = true; }
-		if(JOY_UP   (pad1.value)) { y -= 1; P1walking = true; }
-		if(JOY_BTN_A(pad1.press)) { if (P1holding) { P1throw = true; sound_play(SOUND_JUMP); }}
-		if(JOY_BTN_B(pad1.press)) { if (!P1holding) { sound_play(SOUND_JUMP); }}
+		
+		if(JOY_LEFT (pad1.value)) { x -= 1; player->walking = true; player->walkRight = false; } 
+		if(JOY_RIGHT(pad1.value)) { x += 1; player->walking = true; player->walkRight = true; }
+		if(JOY_DOWN (pad1.value)) { y += 1; player->walking = true; }
+		if(JOY_UP   (pad1.value)) { y -= 1; player->walking = true; }
+		if(JOY_BTN_A(pad1.press)) { if (player->holding) { player->throw = true; sound_play(SOUND_JUMP); }}
+		if(JOY_BTN_B(pad1.press)) { if (!player->holding) { sound_play(SOUND_JUMP); }}
+		
 
-		if (P1throw) {
-			if (P1walkRight) {
-				switch (P1item) {
+		if (player->throw) {
+			if (player->walkRight) {
+				switch (player->item) {
 					case items_hammer: 	px_spr(x+8, y-8, 1, 0xB1); break;
 					case items_pie: 	px_spr(x+8, y-8, 1, 0xC1); break;
 					case items_banana: 	px_spr(x+8, y-8, 0, 0xB3); break;
 				}
 			}
 			else {
-				switch (P1item) {
+				switch (player->item) {
 					case items_hammer: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xB1); break;
 					case items_pie: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xC1); break;
 					case items_banana: 	px_spr(x-16, y-8, 0|PX_SPR_FLIPX, 0xB3); break;
 				}
 			}
 		} 
-		else if (P1holding) {
-			if (P1walkRight) {
-				switch (P1item) {
+		else if (player->holding) {
+			if (player->walkRight) {
+				switch (player->item) {
 					case items_hammer: 	px_spr(x-8, y-24, 1, 0xB0); break;
 					case items_pie: 	px_spr(x-8, y-24, 0, 0xC0); break;
 					case items_banana: 	px_spr(x-8, y-24, 0, 0xB2); break;
 				}
 			}
 			else {
-				switch (P1item) {
+				switch (player->item) {
 					case items_hammer: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xB0); break;
 					case items_pie: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xC0); break;
 					case items_banana: 	px_spr(x, y-24, 0|PX_SPR_FLIPX, 0xB2); break;
@@ -364,12 +375,12 @@ static void game_loop(void){
 		}
 
 		// Draw a sprite.
-		if (P1walking) {
-			if (P1walkRight) {
-				if (P1throw) {
+		if (player->walking) {
+			if (player->walkRight) {
+				if (player->throw) {
 					meta_spr(x, y, 0, anim_walk_right_throwing[px_ticks/8%2]);
 				}
-				else if (P1holding) {
+				else if (player->holding) {
 					meta_spr(x, y, 0, anim_walk_right_holding[px_ticks/8%2]);
 				}
 				else {
@@ -377,10 +388,10 @@ static void game_loop(void){
 				}
 			}
 			else {
-				if (P1throw) {
+				if (player->throw) {
 					meta_spr(x, y, 0, anim_walk_left_throwing[px_ticks/8%2]);
 				}
-				else if (P1holding) {
+				else if (player->holding) {
 			 		meta_spr(x, y, 0, anim_walk_left_holding[px_ticks/8%2]);
 				}
 				else {
@@ -389,11 +400,11 @@ static void game_loop(void){
 			}
 		}
 		else {
-			if (P1walkRight) {
-				if (P1throw) {
+			if (player->walkRight) {
+				if (player->throw) {
 					meta_spr(x, y, 0, META_R1_THROWING);
 				}
-				else if (P1holding) {
+				else if (player->holding) {
 					meta_spr(x, y, 0, META_R1_HOLDING);
 				}
 				else {
@@ -401,10 +412,10 @@ static void game_loop(void){
 				}
 			}
 			else {
-				if (P1throw) {
+				if (player->throw) {
 					meta_spr(x, y, 0, META_L1_THROWING);
 				}
-				else if (P1holding) {
+				else if (player->holding) {
 					meta_spr(x, y, 0, META_L1_HOLDING);
 				}
 				else {
@@ -429,12 +440,12 @@ static void game_loop(void){
 				}
 			}
 			
-			if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !P1holding) {
+			if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
 				pickupsX[idx] = -8;
 				pickupsY[idx] = -8;
 				pickupsR[idx] = 100;
-				P1item = pickupsT[idx];
-				P1holding = true;
+				player->item = pickupsT[idx];
+				player->holding = true;
 			}
 			switch (pickupsT[idx]) {
 				case items_hammer : meta_spr(pickupsX[idx],pickupsY[idx],0,HAMMER_UP); break;
