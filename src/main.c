@@ -571,7 +571,11 @@ static void boss_loop(){
 	static bool smack;
 	
 	bossHits = 0;
-	show_smile_and_sync(bossStage == 0 ? SMILE_TOOTHY : SMILE_CRACKED);
+	switch(bossStage){
+		case 0: show_smile_and_sync(SMILE_TOOTHY); break;
+		case 1: show_smile_and_sync(SMILE_CRACKED); break;
+		default: show_smile_and_sync(SMILE_BROKEN); break;
+	}
 	
 	while(true){
 		handle_input();
@@ -580,7 +584,7 @@ static void boss_loop(){
 		P1.holding = true;
 		P1.item = items_hammer;
 		// Hack the timer to let the player rapidly tap
-		if(P1.throwFrameTimer > 8) P1.throwFrameTimer = 8;
+		if(P1.throwFrameTimer > 6) P1.throwFrameTimer = 6;
 		if(JOY_BTN_A(pad1.press)){
 			// px_debug_hex(P1.y);
 			if(0xC0 < P1.x && 0x80 < P1.y && P1.y < 0xA0){
