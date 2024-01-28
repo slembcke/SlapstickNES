@@ -248,34 +248,10 @@ enum {
 	items_bomb,
 };
 
-static const u8 HAMMER_UP[] = {
-	 0, 0, 0xB0, 0,
-	128,
-};
-static const u8 HAMMER_THROW[] = {
-	 0, 0, 0xB1, 0,
-	128,
-};
-static const u8 PIE_UP[] = {
-	 0, 0, 0xC0, 0,
-	128,
-};
-static const u8 PIE_THROW[] = {
-	 0, 0, 0xC1, 0,
-	128,
-};
-static const u8 BANANA_UP[] = {
-	 0, 0, 0xB2, 0,
-	128,
-};
-static const u8 BANANA_THROW[] = {
-	 0, 0, 0xB3, 0,
-	128,
-};
-
 static u8 pickupsX[4];
 static u8 pickupsY[4];
 static u8 pickupsT[4];
+static u8 pickupsP[4];
 static u8 pickupsR[4];
 
 typedef struct {
@@ -306,32 +282,36 @@ static void tick_player(){
 	if (player->throw) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x+8, y-8, 1, 0xB1); break;
-				case items_pie: 	px_spr(x+8, y-8, 1, 0xC1); break;
-				case items_banana: 	px_spr(x+8, y-8, 0, 0xB3); break;
+				case items_hammer: 	px_spr(x+8, y-8, pickupsP[0], 0xB1); break;
+				case items_pie: 	px_spr(x+8, y-8, pickupsP[1], 0xC1); break;
+				case items_banana: 	px_spr(x+8, y-8, pickupsP[2], 0xB3); break;
+				case items_bomb: 	px_spr(x+8, y-8, pickupsP[3], 0xC4); break;
 			}
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xB1); break;
-				case items_pie: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xC1); break;
-				case items_banana: 	px_spr(x-16, y-8, 0|PX_SPR_FLIPX, 0xB3); break;
+				case items_hammer: 	px_spr(x-16, y-8, pickupsP[0]|PX_SPR_FLIPX, 0xB1); break;
+				case items_pie: 	px_spr(x-16, y-8, pickupsP[1]|PX_SPR_FLIPX, 0xC1); break;
+				case items_banana: 	px_spr(x-16, y-8, pickupsP[2]|PX_SPR_FLIPX, 0xB3); break;
+				case items_bomb: 	px_spr(x-16, y-8, pickupsP[3]|PX_SPR_FLIPX, 0xC4); break;
 			}
 		}
 	} 
 	else if (player->holding) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-8, y-24, 1, 0xB0); break;
-				case items_pie: 	px_spr(x-8, y-24, 1, 0xC0); break;
-				case items_banana: 	px_spr(x-8, y-24, 0, 0xB2); break;
+				case items_hammer: 	px_spr(x-8, y-24, pickupsP[0], 0xB0); break;
+				case items_pie: 	px_spr(x-8, y-24, pickupsP[1], 0xC0); break;
+				case items_banana: 	px_spr(x-8, y-24, pickupsP[2], 0xB2); break;
+				case items_bomb: 	px_spr(x-8, y-24, pickupsP[3], 0xC4); break;
 			}
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xB0); break;
-				case items_pie: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xC0); break;
-				case items_banana: 	px_spr(x, y-24, 0|PX_SPR_FLIPX, 0xB2); break;
+				case items_hammer: 	px_spr(x, y-24, pickupsP[0]|PX_SPR_FLIPX, 0xB0); break;
+				case items_pie: 	px_spr(x, y-24, pickupsP[1]|PX_SPR_FLIPX, 0xC0); break;
+				case items_banana: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xB2); break;
+				case items_bomb: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xC4); break;
 			}
 		}
 	}
@@ -395,9 +375,10 @@ static void tick_player(){
 			if (pickupsR[idx] == 1) {
 				pickupsR[idx] = 0;
 				switch (pickupsT[idx]) {
-					case items_hammer: pickupsX[idx] = 48; pickupsY[idx] = 72; break;
-					case items_pie: pickupsX[idx] = 64; pickupsY[idx] = 72; break;
-					case items_banana: pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+					case items_hammer: 	pickupsX[idx] = 48; pickupsY[idx] = 72; break;
+					case items_pie: 	pickupsX[idx] = 64; pickupsY[idx] = 72; break;
+					case items_banana: 	pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+					case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
 				}
 			}
 		}
@@ -409,13 +390,13 @@ static void tick_player(){
 			player->item = pickupsT[idx];
 			player->holding = true;
 		}
+
 		switch (pickupsT[idx]) {
-			case items_hammer : meta_spr(pickupsX[idx],pickupsY[idx],0,HAMMER_UP); break;
-			case items_pie : meta_spr(pickupsX[idx],pickupsY[idx],0,PIE_UP); break;
-			case items_banana : meta_spr(pickupsX[idx],pickupsY[idx],0,BANANA_UP); break;
-			//case items_bomb : meta_spr(pickupsX[idx],pickupsY[idx],0,BOMB_UP); break;
+			case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
+			case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
+			case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
+			case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
 		}
-		
 	}
 }
 
@@ -451,18 +432,29 @@ static void game_loop(void){
 	P2.throwFrameTimer = 24;
 	P2.palette = 2;
 
+	pickupsT[0] = items_hammer;
 	pickupsX[0] = 48;
 	pickupsY[0] = 72;
-	pickupsT[0] = items_hammer;
+	pickupsP[0] = 1;
 	pickupsR[0] = 0;
+
+	pickupsT[1] = items_pie;
 	pickupsX[1] = 64;
 	pickupsY[1] = 72;
-	pickupsT[1] = items_pie;
+	pickupsP[1] = 1;
 	pickupsR[1] = 0;
+
+	pickupsT[2] = items_banana;
 	pickupsX[2] = 80;
 	pickupsY[2] = 72;
-	pickupsT[2] = items_banana;
+	pickupsP[2] = 0;
 	pickupsR[2] = 0;
+
+	pickupsT[3] = items_bomb;
+	pickupsX[3] = 96;
+	pickupsY[3] = 72;
+	pickupsP[3] = 2;
+	pickupsR[3] = 0;
 
 	px_ppu_sync_disable();{
 		// load the palettes

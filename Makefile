@@ -78,14 +78,14 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 
 %.lz4: %.chr px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
-	touch $@
+	# touch $@
 
 %.bin: %.tmx
 	python $(PX_TOOLS_PATH)/tmx2bin.py $< $@
 
 %.lz4: %.bin px-tools
 	$(PX_TOOLS_PATH)/lz4x -f9 $< $@
-	touch $@
+	# touch $@
 
 src/data.o: $(CHR:.png=.lz4) map/splash.lz4 map/map0.lz4 map/map1.lz4 
 
