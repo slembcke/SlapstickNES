@@ -918,13 +918,11 @@ static void game_loop(void){
 		if(PX.scroll_x > 0) PX.scroll_x--;
 		handle_input();
 
-		// px_profile_start();
 		player = &P1;
 		tick_player();
 
 		player = &P2;
 		tick_player();
-		// px_profile_end();
 		
 		for (idx = 1; idx < 5; idx++) {
 			if (pickupsR[idx] == 1){
@@ -994,7 +992,7 @@ static void game_loop(void){
 		px_spr_end();
 		px_wait_nmi();
 
-		if(JOY_START(pad1.press)) smileScore += 16;
+		// if(JOY_START(pad1.press)) smileScore += 16;
 		if(smileScore/64 != smileShown){
 			smileShown = smileScore/64;
 			show_smile_and_sync(smileShown == 0 ? SMILE_FROWN : SMILE_GRIN);
@@ -1051,6 +1049,10 @@ static void boss_loop(){
 		if (frame < 8 && bossStage < 2) {
 			meta_spr(200-PX.scroll_x,120,2,anim_AIR_PUFF[px_ticks/8%3]);
 		}
+		
+		// terrible hack, smile score is incremented while in the boss stage
+		// tick_player() needs it to be > 128
+		smileScore = 130;
 
 		player = &P1;
 		tick_player();
