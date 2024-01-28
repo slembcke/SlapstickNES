@@ -378,7 +378,7 @@ typedef struct {
 	u16 x, y;
 	bool walking, walkRight;
 	bool holding, throw;
-bool slipping;
+	bool slipping;
 	u8 throwFrameTimer, item;
 	u8 pieFaceTimer;
 	u8 panHitTimer, hammerHitTimer;
@@ -1032,6 +1032,8 @@ static void player_boss_tick(){
 static void boss_loop(){
 	u8 frame = 0;
 	bossHits = 0;
+	P1.slipping = false;
+	P2.slipping = false;
 	switch(bossStage){
 		case 0: show_smile_and_sync(SMILE_TOOTHY); break;
 		case 1: show_smile_and_sync(SMILE_CRACKED); break;
