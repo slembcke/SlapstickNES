@@ -255,7 +255,7 @@ static u8 pickupsP[4];
 static u8 pickupsR[4];
 
 typedef struct {
-	u8 x, y;
+	u16 x, y;
 	bool walking, walkRight;
 	bool holding, throw;
 	u8 throwFrameTimer, item;
@@ -266,9 +266,13 @@ static Player P1, P2;
 static Player* player;
 
 static void tick_player(){
-	static u8 x, y;
+	static u16 x, y;
 	
-	x = player->x, y = player->y;
+	if(player->x < 36 + PX.scroll_x) player->x = 36 + PX.scroll_x;
+	if(player->x > 220 + PX.scroll_x) player->x = 220 + PX.scroll_x;
+	if(player->y < 68) player->y = 68;
+	if(player->y > 196) player->y = 196;
+	x = (u16)player->x - PX.scroll_x, y = player->y;
 	
 	if (player->throw) {
 		player->throwFrameTimer -= 1;
@@ -366,36 +370,13 @@ static void tick_player(){
 		}
 	}
 	
-	
 	for (idx = 0; idx < 4; idx++) {
-		if (pickupsR[idx] > 1) {
-			pickupsR[idx] -= 1;
-		}
-		else {
-			if (pickupsR[idx] == 1) {
-				pickupsR[idx] = 0;
-				switch (pickupsT[idx]) {
-					case items_hammer: 	pickupsX[idx] = 48; pickupsY[idx] = 72; break;
-					case items_pie: 	pickupsX[idx] = 64; pickupsY[idx] = 72; break;
-					case items_banana: 	pickupsX[idx] = 80; pickupsY[idx] = 72; break;
-					case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
-				}
-			}
-		}
-		
-		if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
+		if (abs((s16)player->x-(s16)pickupsX[idx]) < 8 && abs((s16)player->y-(s16)pickupsY[idx]) < 8 && !player->holding) {
 			pickupsX[idx] = -8;
 			pickupsY[idx] = -8;
 			pickupsR[idx] = 100;
 			player->item = pickupsT[idx];
 			player->holding = true;
-		}
-
-		switch (pickupsT[idx]) {
-			case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
-			case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
-			case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
-			case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
 		}
 	}
 }
@@ -489,7 +470,7 @@ static void game_loop(void){
 	static u8 smileScore = 0;
 	static u8 smileShown = 0;
 	
-	P1.x = 32, P1.y = 32;
+	P1.x = 128, P1.y = 128;
 	P1.throwFrameTimer = 24;
 	P1.palette = 0;
 
@@ -534,6 +515,7 @@ static void game_loop(void){
 	show_smile_and_sync(SMILE_FROWN);
 	
 	while(true){
+		PX.scroll_x = 0;
 		handle_input();
 		
 		px_profile_start();
@@ -544,10 +526,34 @@ static void game_loop(void){
 		tick_player();
 		px_profile_end();
 		
+		for (idx = 0; idx < 4; idx++) {
+			if (pickupsR[idx] > 1) {
+				pickupsR[idx] -= 1;
+			}
+			else {
+				if (pickupsR[idx] == 1) {
+					pickupsR[idx] = 0;
+					switch (pickupsT[idx]) {
+						case items_hammer: 	pickupsX[idx] = 48; pickupsY[idx] = 72; break;
+						case items_pie: 	pickupsX[idx] = 64; pickupsY[idx] = 72; break;
+						case items_banana: 	pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+						case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
+					}
+				}
+			}
+			
+			switch (pickupsT[idx]) {
+				case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
+				case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
+				case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
+				case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
+			}
+		}
+		
 		px_spr_end();
 		px_wait_nmi();
 		
-		if(JOY_START(pad1.press)) smileScore += 16;
+		if(JOY_START(pad1.press)) smileScore += 64;
 		if(smileScore/64 != smileShown){
 			smileShown = smileScore/64;
 			show_smile_and_sync(smileShown == 0 ? SMILE_FROWN : SMILE_GRIN);
@@ -595,6 +601,10 @@ static void boss_loop(){
 		handle_input();
 		boss_smack = false;
 		
+		if(bossStage >= 2){
+			if(PX.scroll_x < 88) PX.scroll_x += 2;
+		}
+		
 		player = &P1;
 		tick_player();
 		player_boss_tick();
@@ -616,7 +626,7 @@ static void boss_loop(){
 		}
 		
 		px_debug_hex((px_ticks & 1) == 0);
-		if(bossHits > 32){
+		if(bossHits > 4){
 			bossStage++;
 			break;
 		}
