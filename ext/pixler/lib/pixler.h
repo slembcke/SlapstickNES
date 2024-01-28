@@ -48,8 +48,10 @@ extern u8 px_ctrl;
 #define PX_CTRL_SPR_TABLE_ADDR 0X08
 #define PX_CTRL_BG_TABLE_ADDR 0x10
 
-void px_profile_start(void);
-void px_profile_end(void);
+// void px_profile_start(void);
+// void px_profile_end(void);
+#define px_profile_start() {px_mask |= PX_MASK_GRAY; PPU.mask = px_mask;}
+#define px_profile_end() {px_mask &= ~PX_MASK_GRAY; PPU.mask = px_mask;}
 
 #define px_ppu_sync_enable() {px_mask |= PX_MASK_RENDER_ENABLE; px_wait_nmi();}
 #define px_ppu_sync_disable() {px_mask &= ~PX_MASK_RENDER_ENABLE; px_wait_nmi();}

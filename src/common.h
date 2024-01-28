@@ -7,8 +7,9 @@
 extern u8 CHRBG[];
 extern u8 CHRSM[];
 
-extern u8 MAP_SPLASH[];
+// extern u8 MAP_SPLASH[];
 extern u8 MAP0[];
+extern u8 MAP1[];
 
 // misc.s declarations:
 extern u8 ix, iy, idx, tmp;
