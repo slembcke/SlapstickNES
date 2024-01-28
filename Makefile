@@ -1,4 +1,4 @@
-PROJECT_NAME = GGJ2X
+PROJECT_NAME = Slapstick
 ROM = $(PROJECT_NAME).nes
 
 CC65_ROOT = "C:/Users/Mycroft/Desktop/GGJ202X/wintools/cc65"

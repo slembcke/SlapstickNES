@@ -603,24 +603,10 @@ static void tick_player(){
 		(OAM - 16)[px_sprite_cursor] += 4;
 		(OAM - 20)[px_sprite_cursor] += 8;
 		(OAM - 24)[px_sprite_cursor] += 8;
+		if(player->holding) (OAM - 28)[px_sprite_cursor] += 8;
 	}
 
 	for (idx = 1; idx < 5; idx++) {
-		if (pickupsR[idx] > 1) {
-			pickupsR[idx] -= 1;
-		}
-		else {
-			if (pickupsR[idx] <= 1) {
-				pickupsR[idx] = 0;
-				switch (pickupsT[idx]) {
-					case items_hammer: 	if (player->item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
-					case items_pie: 	if (player->item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
-					case items_banana: 	if (hazardsA[0] == false && player->item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
-					case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
-				}
-			}
-		}
-
 		if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
 			pickupsX[idx] = -8;
 			pickupsY[idx] = -8;
@@ -645,7 +631,6 @@ static void tick_player(){
 				}
 				break;
 			case hazard_pie:
-				px_debug_hex(abs((s16)y - (s16)hazardsY[idx] - 18));
 				if (hazardsA[idx] && abs((s16)x-(s16)hazardsX[idx]) < 8 && abs((s16)y - (s16)hazardsY[idx] - 18) < 8) {
 					player->pieFaceTimer = 60;
 					hazardsA[idx] = false;
@@ -873,6 +858,8 @@ static void draw_hit_bar(){
 static void boss_loop(void);
 
 static void game_loop(void){
+	rand_seed = 8347;
+	
 	P1.x = 128, P1.y = 128;
 	P1.throwFrameTimer = 24;
 	P1.palette_base = 0;
@@ -883,55 +870,37 @@ static void game_loop(void){
 	P2.palette_base = 2;
 	P2.palette = 2;//P2.palette_base;
 
-	pickupsT[0] = items_none;
-	pickupsX[0] = 0;
-	pickupsY[0] = 0;
-	pickupsP[0] = 0;
-	pickupsR[0] = 0;
-
 	pickupsT[1] = items_hammer;
-	pickupsX[1] = 48;
-	pickupsY[1] = 72;
 	pickupsP[1] = 1;
-	pickupsR[1] = 0;
+	pickupsR[1] = 1;
 
 	pickupsT[2] = items_pie;
-	pickupsX[2] = 64;
-	pickupsY[2] = 72;
 	pickupsP[2] = 1;
-	pickupsR[2] = 0;
+	pickupsR[2] = 1;
 
 	pickupsT[3] = items_banana;
-	pickupsX[3] = 80;
-	pickupsY[3] = 72;
 	pickupsP[3] = 0;
-	pickupsR[3] = 0;
+	pickupsR[3] = 1;
 
 	pickupsT[4] = items_bomb;
-	pickupsX[4] = 96;
-	pickupsY[4] = 72;
 	pickupsP[4] = 1;
-	pickupsR[4] = 0;
+	pickupsR[4] = 1;
 
 	pickupsT[5] = items_splosion;
-	pickupsX[5] = 0;
-	pickupsY[5] = 0;
 	pickupsP[5] = 1;
-	pickupsR[5] = 0;
+	pickupsR[5] = 1;
 
 	hazardsT[0] = hazard_peel;
-	hazardsX[0] = -8;
 	hazardsY[0] = -8;
 	hazardsS[0] = 0xB3;
 	hazardsP[0] = 0;
 	hazardsA[0] = false;
 
 	hazardsT[1] = hazard_pie;
-	hazardsX[1] = -8;
 	hazardsY[1] = -8;
 	hazardsS[1] = 0xC2;
 	hazardsP[1] = 1 | PX_SPR_FLIPX;
-	hazardsA[1] = true;
+	hazardsA[1] = false;
 
 	px_ppu_sync_disable();{
 		// load the palettes
@@ -956,22 +925,38 @@ static void game_loop(void){
 		player = &P2;
 		tick_player();
 		// px_profile_end();
-
+		
 		for (idx = 1; idx < 5; idx++) {
-			if (pickupsR[idx] > 1) {
-				pickupsR[idx] -= 1;
-			}
-			else {
-				if (pickupsR[idx] <= 1) {
-					pickupsR[idx] = 0;
-					switch (pickupsT[idx]) {
-						case items_hammer: 	if (P1.item != items_hammer && P2.item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
-						case items_pie: 	if (P1.item != items_pie && P2.item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
-						case items_banana: 	if (hazardsA[0] == false && P1.item != items_banana && P2.item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
-						case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
-					}
+			if (pickupsR[idx] == 1){
+				switch (pickupsT[idx]) {
+					case items_hammer:
+						if (P1.item != items_hammer && P2.item != items_hammer) {
+							pickupsX[idx] = 48 + rand8()/2; pickupsY[idx] = 64 + rand8()/2;
+							pickupsR[idx] = 0;
+						}
+						break;
+					case items_banana:
+						px_debug_hex(px_ticks);
+						if (hazardsA[0] == false && P1.item != items_banana && P2.item != items_banana) {
+							pickupsX[idx] = 48 + rand8()/2; pickupsY[idx] = 64 + rand8()/2;
+							pickupsR[idx] = 0;
+						}
+						break;
+					case items_pie:
+						if (hazardsA[1] == false && P1.item != items_pie && P2.item != items_pie) {
+							pickupsX[idx] = 48 + rand8()/2; pickupsY[idx] = 64 + rand8()/2;
+							pickupsR[idx] = 0;
+						}
+						break;
+					case items_bomb:
+						if (P1.item != items_bomb && P2.item != items_bomb) {
+							pickupsX[idx] = 48 + rand8()/2; pickupsY[idx] = 64 + rand8()/2;
+							pickupsR[idx] = 0;
+						}
+						break;
 				}
 			}
+			if (pickupsR[idx] > 1) pickupsR[idx] -= 1;
 
 			// draw pickups
 			switch (pickupsT[idx]) {
@@ -985,7 +970,10 @@ static void game_loop(void){
 		for (idx = 0; idx < HAZARD_COUNT; idx++) {
 			if(hazardsT[idx] == hazard_pie){
 				hazardsX[idx] -= (hazardsP[idx] & PX_SPR_FLIPX ? -2 : 2);
-				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]) hazardsY[idx] = -8;
+				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]){
+					hazardsY[idx] = -8;
+					hazardsA[idx] = false;
+				}
 			}
 
 			// draw hazards
@@ -1026,12 +1014,8 @@ static void player_boss_tick(){
 	// Hack the timer to let the player rapidly tap
 	if(player->throwFrameTimer > 6) player->throwFrameTimer = 6;
 
-	px_debug_hex_addr = NT_ADDR(0, 16, 2);
-	px_debug_hex(P1.x);
-
 	// Even more total hackery with the frame timer here...
 	if(player->throwFrameTimer == 5 && player->walkRight){
-		// px_debug_hex(P1.y);
 		if(bossStage < 2 && 0xC0 < player->x && 0x80 < player->y && player->y < 0x94){
 			bossHits++;
 			boss_smack = true;
@@ -1060,7 +1044,7 @@ static void boss_loop(){
 		if(bossStage >= 2 && PX.scroll_x < 88) PX.scroll_x += 2;
 		if(bossStage >= 3 && PX.scroll_x < 256) PX.scroll_x += 1;
 		frame = px_ticks%96/4;
-		if (frame < 8  && bossStage < 2) {
+		if (frame < 8 && bossStage < 2) {
 			meta_spr(200-PX.scroll_x,120,2,anim_AIR_PUFF[px_ticks/8%3]);
 		}
 
@@ -1129,7 +1113,11 @@ static void boss_loop(){
 			break;
 		}
 	}
-
+	
+	P1.item = items_none;
+	P1.holding = false;
+	P2.item = items_none;
+	P2.holding = false;
 	px_buffer_set_color(10, PALETTE[10]);
 }
 
