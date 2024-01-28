@@ -1026,7 +1026,7 @@ static void boss_loop(){
 		if(bossStage >= 2 && PX.scroll_x < 88) PX.scroll_x += 2;
 		if(bossStage >= 3 && PX.scroll_x < 256) PX.scroll_x += 1;
 		frame = px_ticks%96/4;
-		if (frame < 8) {
+		if (frame < 8 && bossStage < 2) {
 			meta_spr(200-PX.scroll_x,120,2,anim_AIR_PUFF[px_ticks/8%3]);
 		}
 
