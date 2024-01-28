@@ -956,7 +956,10 @@ static void game_loop(void){
 		for (idx = 0; idx < HAZARD_COUNT; idx++) {
 			if(hazardsT[idx] == hazard_pie){
 				hazardsX[idx] -= (hazardsP[idx] & PX_SPR_FLIPX ? -2 : 2);
-				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]) hazardsY[idx] = -8;
+				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]){
+					hazardsY[idx] = -8;
+					hazardsA[idx] = false;
+				}
 			}
 
 			// draw hazards
