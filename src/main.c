@@ -12,8 +12,8 @@ static const u8 PALETTE[] = {
 	BG_COLOR, 0x01, 0x11, 0x21,
 	
 	BG_COLOR, 0x18, 0x28, 0x38, // P1, BANANA
-	BG_COLOR, 0x3d, 0x17, 0x30, // HAMMER, PIE
-	BG_COLOR, 0x1c, 0x2c, 0x3c,	// P2, BOMB
+	BG_COLOR, 0x3d, 0x27, 0x30, // HAMMER, PIE, BOMB
+	BG_COLOR, 0x1c, 0x2c, 0x3c,	// P2,
 	BG_COLOR, 0x01, 0x11, 0x21,
 };
 
@@ -209,6 +209,72 @@ static const u8 META_L2_THROWING[] = {
 };
 
 
+static const u8 BOMB_F1[] = {
+	// FUSE
+	 0, -8, 0xB4, PX_SPR_FLIPX,
+	// BOMB
+	 0, 0, 0xC4, PX_SPR_FLIPX,
+	128,
+};
+static const u8 BOMB_F2[] = {
+	// FUSE
+	 0, -8, 0xB7, PX_SPR_FLIPX,
+	// BOMB
+	 0, 0, 0xC4, PX_SPR_FLIPX,
+	128,
+};
+static const u8 BOMB_F3[] = {
+	// FUSE
+	 0, -8, 0xB5, PX_SPR_FLIPX,
+	// BOMB
+	 0, 0, 0xC4, PX_SPR_FLIPX,
+	128,
+};
+static const u8 BOMB_F4[] = {
+	// FUSE
+	 0, -8, 0xB8, PX_SPR_FLIPX,
+	// BOMB
+	 0, 0, 0xC4, PX_SPR_FLIPX,
+	128,
+};
+static const u8 BOMB_F5[] = {
+	// FUSE
+	 0, -8, 0xB6, PX_SPR_FLIPX,
+	// BOMB
+	 0, 0, 0xC4, PX_SPR_FLIPX,
+	128,
+};
+static const u8 BOMB_F6[] = {
+	// FUSE
+	 //0, -8, 0xB5, PX_SPR_FLIPX,
+	// BOMB
+	 0, 0, 0xC4, PX_SPR_FLIPX,
+	128,
+};
+
+static const u8* anim_BOMB_burn_DOWN[] = {
+	BOMB_F1,
+	BOMB_F2,
+	BOMB_F1,
+	BOMB_F2,
+	BOMB_F1,
+	BOMB_F2,
+
+	BOMB_F3,
+	BOMB_F4,
+	BOMB_F3,
+	BOMB_F4,
+	BOMB_F3,
+	BOMB_F4,
+
+	BOMB_F5,
+	BOMB_F6,
+	BOMB_F5,
+	BOMB_F6,
+	BOMB_F5,
+	BOMB_F6,
+};
+
 static const u8* anim_walk_right[] = {
 	META_R1,
 	META_R2
@@ -218,7 +284,6 @@ static const u8* anim_walk_left[] = {
 	META_L1,
 	META_L2,
 };
-
 
 static const u8* anim_walk_right_holding[] = {
 	META_R1_HOLDING,
@@ -242,23 +307,35 @@ static const u8* anim_walk_left_throwing[] = {
 };
 
 enum {
+	items_none,
 	items_hammer,
 	items_pie,
 	items_banana,
 	items_bomb,
+	hazard_peel,
 };
 
-static u8 pickupsX[4];
-static u8 pickupsY[4];
-static u8 pickupsT[4];
-static u8 pickupsP[4];
-static u8 pickupsR[4];
+static u8 pickupsX[5];
+static u8 pickupsY[5];
+static u8 pickupsT[5];
+static u8 pickupsP[5];
+static u8 pickupsR[5];
+
+static u8 hazardsT[1];
+static u8 hazardsX[1];
+static u8 hazardsY[1];
+static u8 hazardsS[1];
+static u8 hazardsP[1];
+static u8 hazardsA[1];
 
 typedef struct {
 	u8 x, y;
 	bool walking, walkRight;
 	bool holding, throw;
 	u8 throwFrameTimer, item;
+	u8 pieFaceTimer, bananaSlipTimer;
+	u8 panHitTimer, hammerHitTimer;
+	u8 palette_base;
 	u8 palette;
 } Player;
 
@@ -276,42 +353,51 @@ static void tick_player(){
 			player->throwFrameTimer = 24;
 			player->throw = false;
 			player->holding = false;
+			player->item = items_none;
 		}	
+	}
+
+	if (player->hammerHitTimer > 1) {
+		player->palette = 1;
+		player->hammerHitTimer -= 1;
+		if (player->hammerHitTimer == 1) {
+			player->palette = player->palette_base;
+		}
 	}
 	
 	if (player->throw) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x+8, y-8, pickupsP[0], 0xB1); break;
-				case items_pie: 	px_spr(x+8, y-8, pickupsP[1], 0xC1); break;
-				case items_banana: 	px_spr(x+8, y-8, pickupsP[2], 0xB3); break;
-				case items_bomb: 	px_spr(x+8, y-8, pickupsP[3], 0xC4); break;
+				case items_hammer: 	px_spr(x+8, y-8, pickupsP[1], 0xB1); break;
+				case items_pie: 	px_spr(x+8, y-8, pickupsP[2], 0xC1); break;
+				case items_banana: 	px_spr(x+8, y-8, pickupsP[3], 0xB3); break;
+				case items_bomb: 	meta_spr(x+8, y-8, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
 			}
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-16, y-8, pickupsP[0]|PX_SPR_FLIPX, 0xB1); break;
-				case items_pie: 	px_spr(x-16, y-8, pickupsP[1]|PX_SPR_FLIPX, 0xC1); break;
-				case items_banana: 	px_spr(x-16, y-8, pickupsP[2]|PX_SPR_FLIPX, 0xB3); break;
-				case items_bomb: 	px_spr(x-16, y-8, pickupsP[3]|PX_SPR_FLIPX, 0xC4); break;
+				case items_hammer: 	px_spr(x-16, y-8, pickupsP[1]|PX_SPR_FLIPX, 0xB1); break;
+				case items_pie: 	px_spr(x-16, y-8, pickupsP[2]|PX_SPR_FLIPX, 0xC1); break;
+				case items_banana: 	px_spr(x-16, y-8, pickupsP[3]|PX_SPR_FLIPX, 0xB3); break;
+				case items_bomb: 	meta_spr(x-16, y-8, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
 			}
 		}
 	} 
 	else if (player->holding) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-8, y-24, pickupsP[0], 0xB0); break;
-				case items_pie: 	px_spr(x-8, y-24, pickupsP[1], 0xC0); break;
-				case items_banana: 	px_spr(x-8, y-24, pickupsP[2], 0xB2); break;
-				case items_bomb: 	px_spr(x-8, y-24, pickupsP[3], 0xC4); break;
+				case items_hammer: 	px_spr(x-8, y-24, pickupsP[1], 0xB0); break;
+				case items_pie: 	px_spr(x-8, y-24, pickupsP[2], 0xC0); break;
+				case items_banana: 	px_spr(x-8, y-24, pickupsP[3], 0xB2); break;
+				case items_bomb: 	meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
 			}
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x, y-24, pickupsP[0]|PX_SPR_FLIPX, 0xB0); break;
-				case items_pie: 	px_spr(x, y-24, pickupsP[1]|PX_SPR_FLIPX, 0xC0); break;
-				case items_banana: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xB2); break;
-				case items_bomb: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xC4); break;
+				case items_hammer: 	px_spr(x, y-24, pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
+				case items_pie: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xC0); break;
+				case items_banana: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xB2); break;
+				case items_bomb: 	meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
 			}
 		}
 	}
@@ -367,17 +453,17 @@ static void tick_player(){
 	}
 	
 	
-	for (idx = 0; idx < 4; idx++) {
+	for (idx = 1; idx < 5; idx++) {
 		if (pickupsR[idx] > 1) {
 			pickupsR[idx] -= 1;
 		}
 		else {
-			if (pickupsR[idx] == 1) {
+			if (pickupsR[idx] <= 1) {
 				pickupsR[idx] = 0;
 				switch (pickupsT[idx]) {
-					case items_hammer: 	pickupsX[idx] = 48; pickupsY[idx] = 72; break;
-					case items_pie: 	pickupsX[idx] = 64; pickupsY[idx] = 72; break;
-					case items_banana: 	pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+					case items_hammer: 	if (player->item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
+					case items_pie: 	if (player->item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
+					case items_banana: 	if (hazardsA[0] == false && player->item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
 					case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
 				}
 			}
@@ -395,8 +481,12 @@ static void tick_player(){
 			case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
 			case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
 			case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
-			case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
+			case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
 		}
+	}
+
+	for (idx = 0; idx < 1; idx++) {
+		px_spr(hazardsX[idx],hazardsY[idx],hazardsP[idx],hazardsS[idx]);
 	}
 }
 
@@ -410,51 +500,91 @@ static void handle_input(){
 	if(JOY_RIGHT(pad1.value)) { P1.x += 1; P1.walking = true; P1.walkRight = true; }
 	if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
 	if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
-	if(JOY_BTN_A(pad1.press)) { if (P1.holding) { P1.throw = true; sound_play(SOUND_JUMP); }}
+	if(JOY_BTN_A(pad1.press)) { 
+		if (P1.holding) { 
+			P1.throw = true;
+			if (P1.item == items_hammer) {
+				if (abs((s16)P1.x-(s16)P2.x) <= 24 && abs((s16)P1.y-(s16)P2.y) <= 24) {
+					P2.hammerHitTimer = 24;
+				}
+			}
+			else if (P1.item == items_banana) {
+				hazardsA[0] = true;
+				hazardsX[0] = P1.x;
+				hazardsY[0] = P1.y;
+			}
+			sound_play(SOUND_JUMP);
+		}
+	}
 	if(JOY_BTN_B(pad1.press)) { if (!P1.holding) { sound_play(SOUND_JUMP); }}
 	
 	if(JOY_LEFT (pad2.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; } 
 	if(JOY_RIGHT(pad2.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
 	if(JOY_DOWN (pad2.value)) { P2.y += 1; P2.walking = true; }
 	if(JOY_UP   (pad2.value)) { P2.y -= 1; P2.walking = true; }
-	if(JOY_BTN_A(pad2.press)) { if (P2.holding) { P2.throw = true; sound_play(SOUND_JUMP); }}
+	if(JOY_BTN_A(pad2.press)) { 
+		if (P2.holding) { 
+			P2.throw = true;
+			if (P2.item == items_hammer) {
+				if (abs((s16)P2.x-(s16)P1.x) <= 24 && abs((s16)P2.y-(s16)P1.y) <= 24) {
+					P1.hammerHitTimer = 24;
+				}
+			}
+			sound_play(SOUND_JUMP);
+		}
+	}
 	if(JOY_BTN_B(pad2.press)) { if (!P2.holding) { sound_play(SOUND_JUMP); }}
 }
 
 static void boss_loop(void);
 
 static void game_loop(void){
-	P1.x = 32, P1.y = 32;
+	P1.x = 64, P1.y = 128;
 	P1.throwFrameTimer = 24;
-	P1.palette = 0;
+	P1.palette_base = 0;
+	P1.palette = 0;//P1.palette_base;
 
-	P2.x = 64, P2.y = 64;
+	P2.x = 96, P2.y = 128;
 	P2.throwFrameTimer = 24;
-	P2.palette = 2;
+	P2.palette_base = 2;
+	P2.palette = 2;//P2.palette_base;
 
-	pickupsT[0] = items_hammer;
-	pickupsX[0] = 48;
-	pickupsY[0] = 72;
-	pickupsP[0] = 1;
+	pickupsT[0] = items_none;
+	pickupsX[0] = 0;
+	pickupsY[0] = 0;
+	pickupsP[0] = 0;
 	pickupsR[0] = 0;
-
-	pickupsT[1] = items_pie;
-	pickupsX[1] = 64;
+	
+	pickupsT[1] = items_hammer;
+	pickupsX[1] = 48;
 	pickupsY[1] = 72;
 	pickupsP[1] = 1;
 	pickupsR[1] = 0;
 
-	pickupsT[2] = items_banana;
-	pickupsX[2] = 80;
+	pickupsT[2] = items_pie;
+	pickupsX[2] = 64;
 	pickupsY[2] = 72;
-	pickupsP[2] = 0;
+	pickupsP[2] = 1;
 	pickupsR[2] = 0;
 
-	pickupsT[3] = items_bomb;
-	pickupsX[3] = 96;
+	pickupsT[3] = items_banana;
+	pickupsX[3] = 80;
 	pickupsY[3] = 72;
-	pickupsP[3] = 2;
+	pickupsP[3] = 0;
 	pickupsR[3] = 0;
+
+	pickupsT[4] = items_bomb;
+	pickupsX[4] = 96;
+	pickupsY[4] = 72;
+	pickupsP[4] = 1;
+	pickupsR[4] = 0;
+
+	hazardsT[0] = hazard_peel;
+	hazardsX[0] = -8;
+	hazardsY[0] = -8;
+	hazardsS[0] = 0xB3;
+	hazardsP[0] = 0;
+	hazardsA[0] = false;
 
 	px_ppu_sync_disable();{
 		// load the palettes
