@@ -286,13 +286,144 @@ typedef struct {
 } Player;
 
 static Player P1, P2;
+static Player* player;
 
-static void game_loop(void){
-	static Player* player;
+static void tick_player(){
 	static u8 x, y;
 	
+	x = player->x, y = player->y;
+	
+	if (player->throw) {
+		player->throwFrameTimer -= 1;
+		if (player->throwFrameTimer == 1) {
+			player->throwFrameTimer = 24;
+			player->throw = false;
+			player->holding = false;
+		}	
+	}
+	
+	if (player->throw) {
+		if (player->walkRight) {
+			switch (player->item) {
+				case items_hammer: 	px_spr(x+8, y-8, 1, 0xB1); break;
+				case items_pie: 	px_spr(x+8, y-8, 1, 0xC1); break;
+				case items_banana: 	px_spr(x+8, y-8, 0, 0xB3); break;
+			}
+		}
+		else {
+			switch (player->item) {
+				case items_hammer: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xB1); break;
+				case items_pie: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xC1); break;
+				case items_banana: 	px_spr(x-16, y-8, 0|PX_SPR_FLIPX, 0xB3); break;
+			}
+		}
+	} 
+	else if (player->holding) {
+		if (player->walkRight) {
+			switch (player->item) {
+				case items_hammer: 	px_spr(x-8, y-24, 1, 0xB0); break;
+				case items_pie: 	px_spr(x-8, y-24, 0, 0xC0); break;
+				case items_banana: 	px_spr(x-8, y-24, 0, 0xB2); break;
+			}
+		}
+		else {
+			switch (player->item) {
+				case items_hammer: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xB0); break;
+				case items_pie: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xC0); break;
+				case items_banana: 	px_spr(x, y-24, 0|PX_SPR_FLIPX, 0xB2); break;
+			}
+		}
+	}
+
+	// Draw a sprite.
+	if (player->walking) {
+		if (player->walkRight) {
+			if (player->throw) {
+				meta_spr(x, y, 0, anim_walk_right_throwing[px_ticks/8%2]);
+			}
+			else if (player->holding) {
+				meta_spr(x, y, 0, anim_walk_right_holding[px_ticks/8%2]);
+			}
+			else {
+				meta_spr(x, y, 0, anim_walk_right[px_ticks/8%2]);
+			}
+		}
+		else {
+			if (player->throw) {
+				meta_spr(x, y, 0, anim_walk_left_throwing[px_ticks/8%2]);
+			}
+			else if (player->holding) {
+				meta_spr(x, y, 0, anim_walk_left_holding[px_ticks/8%2]);
+			}
+			else {
+				meta_spr(x, y, 0, anim_walk_left[px_ticks/8%2]);
+			}
+		}
+	}
+	else {
+		if (player->walkRight) {
+			if (player->throw) {
+				meta_spr(x, y, 0, META_R1_THROWING);
+			}
+			else if (player->holding) {
+				meta_spr(x, y, 0, META_R1_HOLDING);
+			}
+			else {
+				meta_spr(x, y, 0, META_R1);
+			}
+		}
+		else {
+			if (player->throw) {
+				meta_spr(x, y, 0, META_L1_THROWING);
+			}
+			else if (player->holding) {
+				meta_spr(x, y, 0, META_L1_HOLDING);
+			}
+			else {
+				meta_spr(x, y, 0, META_L1);
+			}
+		}
+	}
+	
+	
+	for (idx = 0; idx < 4; idx++) {
+		if (pickupsR[idx] > 1) {
+			pickupsR[idx] -= 1;
+		}
+		else {
+			if (pickupsR[idx] == 1) {
+				pickupsR[idx] = 0;
+				switch (pickupsT[idx]) {
+					case items_hammer: pickupsX[idx] = 48; pickupsY[idx] = 72; break;
+					case items_pie: pickupsX[idx] = 64; pickupsY[idx] = 72; break;
+					case items_banana: pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+				}
+			}
+		}
+		
+		if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
+			pickupsX[idx] = -8;
+			pickupsY[idx] = -8;
+			pickupsR[idx] = 100;
+			player->item = pickupsT[idx];
+			player->holding = true;
+		}
+		switch (pickupsT[idx]) {
+			case items_hammer : meta_spr(pickupsX[idx],pickupsY[idx],0,HAMMER_UP); break;
+			case items_pie : meta_spr(pickupsX[idx],pickupsY[idx],0,PIE_UP); break;
+			case items_banana : meta_spr(pickupsX[idx],pickupsY[idx],0,BANANA_UP); break;
+			//case items_bomb : meta_spr(pickupsX[idx],pickupsY[idx],0,BOMB_UP); break;
+		}
+		
+	}
+}
+
+static void game_loop(void){
 	P1.x = 32, P1.y = 32;
 	P1.throwFrameTimer = 24;
+
+	P2.x = 64, P2.y = 64;
+	P2.throwFrameTimer = 24;
 
 	pickupsX[0] = 48;
 	pickupsY[0] = 72;
@@ -320,141 +451,30 @@ static void game_loop(void){
 	while(true){
 		read_gamepads();
 		
+		P1.walking = false;
+		P2.walking = false;
+		
+		if(JOY_LEFT (pad1.value)) { P1.x -= 1; P1.walking = true; P1.walkRight = false; } 
+		if(JOY_RIGHT(pad1.value)) { P1.x += 1; P1.walking = true; P1.walkRight = true; }
+		if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
+		if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
+		if(JOY_BTN_A(pad1.press)) { if (P1.holding) { P1.throw = true; sound_play(SOUND_JUMP); }}
+		if(JOY_BTN_B(pad1.press)) { if (!P1.holding) { sound_play(SOUND_JUMP); }}
+		
+		if(JOY_LEFT (pad1.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; } 
+		if(JOY_RIGHT(pad1.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
+		if(JOY_DOWN (pad1.value)) { P2.y += 1; P2.walking = true; }
+		if(JOY_UP   (pad1.value)) { P2.y -= 1; P2.walking = true; }
+		if(JOY_BTN_A(pad1.press)) { if (P2.holding) { P2.throw = true; sound_play(SOUND_JUMP); }}
+		if(JOY_BTN_B(pad1.press)) { if (!P2.holding) { sound_play(SOUND_JUMP); }}
+		
+		px_profile_start();
 		player = &P1;
-		player->walking = false;
-
-		if (player->throw) {
-			player->throwFrameTimer -= 1;
-			if (player->throwFrameTimer == 1) {
-				player->throwFrameTimer = 24;
-				player->throw = false;
-				player->holding = false;
-			}	
-		}
-
+		tick_player();
 		
-		if(JOY_LEFT (pad1.value)) { x -= 1; player->walking = true; player->walkRight = false; } 
-		if(JOY_RIGHT(pad1.value)) { x += 1; player->walking = true; player->walkRight = true; }
-		if(JOY_DOWN (pad1.value)) { y += 1; player->walking = true; }
-		if(JOY_UP   (pad1.value)) { y -= 1; player->walking = true; }
-		if(JOY_BTN_A(pad1.press)) { if (player->holding) { player->throw = true; sound_play(SOUND_JUMP); }}
-		if(JOY_BTN_B(pad1.press)) { if (!player->holding) { sound_play(SOUND_JUMP); }}
-		
-
-		if (player->throw) {
-			if (player->walkRight) {
-				switch (player->item) {
-					case items_hammer: 	px_spr(x+8, y-8, 1, 0xB1); break;
-					case items_pie: 	px_spr(x+8, y-8, 1, 0xC1); break;
-					case items_banana: 	px_spr(x+8, y-8, 0, 0xB3); break;
-				}
-			}
-			else {
-				switch (player->item) {
-					case items_hammer: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xB1); break;
-					case items_pie: 	px_spr(x-16, y-8, 1|PX_SPR_FLIPX, 0xC1); break;
-					case items_banana: 	px_spr(x-16, y-8, 0|PX_SPR_FLIPX, 0xB3); break;
-				}
-			}
-		} 
-		else if (player->holding) {
-			if (player->walkRight) {
-				switch (player->item) {
-					case items_hammer: 	px_spr(x-8, y-24, 1, 0xB0); break;
-					case items_pie: 	px_spr(x-8, y-24, 0, 0xC0); break;
-					case items_banana: 	px_spr(x-8, y-24, 0, 0xB2); break;
-				}
-			}
-			else {
-				switch (player->item) {
-					case items_hammer: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xB0); break;
-					case items_pie: 	px_spr(x, y-24, 1|PX_SPR_FLIPX, 0xC0); break;
-					case items_banana: 	px_spr(x, y-24, 0|PX_SPR_FLIPX, 0xB2); break;
-				}
-			}
-		}
-
-		// Draw a sprite.
-		if (player->walking) {
-			if (player->walkRight) {
-				if (player->throw) {
-					meta_spr(x, y, 0, anim_walk_right_throwing[px_ticks/8%2]);
-				}
-				else if (player->holding) {
-					meta_spr(x, y, 0, anim_walk_right_holding[px_ticks/8%2]);
-				}
-				else {
-					meta_spr(x, y, 0, anim_walk_right[px_ticks/8%2]);
-				}
-			}
-			else {
-				if (player->throw) {
-					meta_spr(x, y, 0, anim_walk_left_throwing[px_ticks/8%2]);
-				}
-				else if (player->holding) {
-			 		meta_spr(x, y, 0, anim_walk_left_holding[px_ticks/8%2]);
-				}
-				else {
-			 		meta_spr(x, y, 0, anim_walk_left[px_ticks/8%2]);
-				}
-			}
-		}
-		else {
-			if (player->walkRight) {
-				if (player->throw) {
-					meta_spr(x, y, 0, META_R1_THROWING);
-				}
-				else if (player->holding) {
-					meta_spr(x, y, 0, META_R1_HOLDING);
-				}
-				else {
-					meta_spr(x, y, 0, META_R1);
-				}
-			}
-			else {
-				if (player->throw) {
-					meta_spr(x, y, 0, META_L1_THROWING);
-				}
-				else if (player->holding) {
-					meta_spr(x, y, 0, META_L1_HOLDING);
-				}
-				else {
-					meta_spr(x, y, 0, META_L1);
-				}
-			}
-		}
-		
-		
-		for (idx = 0; idx < 4; idx++) {
-			if (pickupsR[idx] > 1) {
-				pickupsR[idx] -= 1;
-			}
-			else {
-				if (pickupsR[idx] == 1) {
-					pickupsR[idx] = 0;
-					switch (pickupsT[idx]) {
-						case items_hammer: pickupsX[idx] = 48; pickupsY[idx] = 72; break;
-						case items_pie: pickupsX[idx] = 64; pickupsY[idx] = 72; break;
-						case items_banana: pickupsX[idx] = 80; pickupsY[idx] = 72; break;
-					}
-				}
-			}
-			
-			if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
-				pickupsX[idx] = -8;
-				pickupsY[idx] = -8;
-				pickupsR[idx] = 100;
-				player->item = pickupsT[idx];
-				player->holding = true;
-			}
-			switch (pickupsT[idx]) {
-				case items_hammer : meta_spr(pickupsX[idx],pickupsY[idx],0,HAMMER_UP); break;
-				case items_pie : meta_spr(pickupsX[idx],pickupsY[idx],0,PIE_UP); break;
-				case items_banana : meta_spr(pickupsX[idx],pickupsY[idx],0,BANANA_UP); break;
-				//case items_bomb : meta_spr(pickupsX[idx],pickupsY[idx],0,BOMB_UP); break;
-			}
-			
-		}
+		player = &P2;
+		tick_player();
+		px_profile_end();
 		
 		px_spr_end();
 		px_wait_nmi();
