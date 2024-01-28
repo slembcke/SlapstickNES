@@ -421,7 +421,7 @@ static void handle_input(){
 	if(JOY_BTN_B(pad2.press)) { if (!P2.holding) { sound_play(SOUND_JUMP); }}
 }
 
-static const u8 SMILE0[] = {
+static const u8 SMILE_FROWN[] = {
 	      0x9B, 0x9C,
 	      0xAB, 0xAC,
 	0xBA, 0xBB, 0xBC, 0xBD,
@@ -431,7 +431,7 @@ static const u8 SMILE0[] = {
 	0xFA, 0xFB, 0xFC, 0xFD,
 };
 
-static const u8 SMILE1[] = {
+static const u8 SMILE_GRIN[] = {
 	      0x9B, 0x9C,
 	      0xAB, 0xAC,
 	0x62, 0x63, 0x64, 0x65,
@@ -441,7 +441,7 @@ static const u8 SMILE1[] = {
 	0xA2, 0xA3, 0xA4, 0xA5,
 };
 
-static const u8 SMILE2[] = {
+static const u8 SMILE_TOOTHY[] = {
 	      0x60, 0x61,
 	      0x70, 0x71,
 	0x66, 0x67, 0x68, 0x69,
@@ -451,7 +451,17 @@ static const u8 SMILE2[] = {
 	0xA6, 0xA7, 0xA8, 0xA9,
 };
 
-static const u8 SMILE3[] = {
+static const u8 SMILE_CRACKED[] = {
+	      0x60, 0x61,
+	      0x70, 0x71,
+	0xB2, 0xB3, 0xB4, 0xB5,
+	0xC2, 0xC3, 0xC4, 0xC5,
+	0xD2, 0xD3, 0xD4, 0xD5,
+	0xE2, 0xE3, 0xE4, 0xE5,
+	0xF2, 0xF3, 0xF4, 0xF5,
+};
+
+static const u8 SMILE_BROKEN[] = {
 	      0x60, 0x61,
 	      0x70, 0x71,
 	0xB6, 0xB7, 0xB8, 0xB9,
@@ -521,7 +531,7 @@ static void game_loop(void){
 		px_lz4_to_vram(NT_ADDR(1, 0, 0), MAP1);
 	} px_ppu_sync_enable();
 	
-	show_smile_and_sync(SMILE0);
+	show_smile_and_sync(SMILE_FROWN);
 	
 	while(true){
 		handle_input();
@@ -540,27 +550,28 @@ static void game_loop(void){
 		if(JOY_START(pad1.press)) smileScore += 16;
 		if(smileScore/64 != smileShown){
 			smileShown = smileScore/64;
-			show_smile_and_sync(smileShown == 0 ? SMILE0 : SMILE1);
+			show_smile_and_sync(smileShown == 0 ? SMILE_FROWN : SMILE_GRIN);
 		}
 		
 		if(smileScore >= 128){
 			boss_loop();
 			
 			smileScore = 0;
-			show_smile_and_sync(SMILE0);
+			show_smile_and_sync(SMILE_FROWN);
 		}
 	}
 	
 	game_loop();
 }
 
+static u8 bossStage;
+
 static void boss_loop(){
-	static u8 boss_hits;
+	static u8 bossHits;
 	static bool smack;
-	static u8 teeth_shown;
 	
-	boss_hits = 0;
-	show_smile_and_sync(SMILE2);
+	bossHits = 0;
+	show_smile_and_sync(bossStage == 0 ? SMILE_TOOTHY : SMILE_CRACKED);
 	
 	while(true){
 		handle_input();
@@ -573,7 +584,7 @@ static void boss_loop(){
 		if(JOY_BTN_A(pad1.press)){
 			// px_debug_hex(P1.y);
 			if(0xC0 < P1.x && 0x80 < P1.y && P1.y < 0xA0){
-				boss_hits++;
+				bossHits++;
 				smack = true;
 			}
 		}
@@ -581,7 +592,7 @@ static void boss_loop(){
 		player = &P1;
 		tick_player();
 		
-		// px_debug_hex(boss_hits);
+		// px_debug_hex(bossHits);
 		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
 		
 		px_spr_end();
@@ -594,7 +605,10 @@ static void boss_loop(){
 		}
 		
 		px_debug_hex((px_ticks & 1) == 0);
-		if(boss_hits > 32) break;
+		if(bossHits > 32){
+			bossStage++;
+			break;
+		}
 	}
 	
 	px_buffer_set_color(10, PALETTE[10]);
