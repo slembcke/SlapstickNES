@@ -418,6 +418,29 @@ static void tick_player(){
 	}
 }
 
+static void handle_input(){
+	read_gamepads();
+	
+	P1.walking = false;
+	P2.walking = false;
+	
+	if(JOY_LEFT (pad1.value)) { P1.x -= 1; P1.walking = true; P1.walkRight = false; } 
+	if(JOY_RIGHT(pad1.value)) { P1.x += 1; P1.walking = true; P1.walkRight = true; }
+	if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
+	if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
+	if(JOY_BTN_A(pad1.press)) { if (P1.holding) { P1.throw = true; sound_play(SOUND_JUMP); }}
+	if(JOY_BTN_B(pad1.press)) { if (!P1.holding) { sound_play(SOUND_JUMP); }}
+	
+	if(JOY_LEFT (pad2.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; } 
+	if(JOY_RIGHT(pad2.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
+	if(JOY_DOWN (pad2.value)) { P2.y += 1; P2.walking = true; }
+	if(JOY_UP   (pad2.value)) { P2.y -= 1; P2.walking = true; }
+	if(JOY_BTN_A(pad2.press)) { if (P2.holding) { P2.throw = true; sound_play(SOUND_JUMP); }}
+	if(JOY_BTN_B(pad2.press)) { if (!P2.holding) { sound_play(SOUND_JUMP); }}
+}
+
+static void boss_loop(void);
+
 static void game_loop(void){
 	P1.x = 32, P1.y = 32;
 	P1.throwFrameTimer = 24;
@@ -449,24 +472,7 @@ static void game_loop(void){
 	} px_ppu_sync_enable();
 	
 	while(true){
-		read_gamepads();
-		
-		P1.walking = false;
-		P2.walking = false;
-		
-		if(JOY_LEFT (pad1.value)) { P1.x -= 1; P1.walking = true; P1.walkRight = false; } 
-		if(JOY_RIGHT(pad1.value)) { P1.x += 1; P1.walking = true; P1.walkRight = true; }
-		if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
-		if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
-		if(JOY_BTN_A(pad1.press)) { if (P1.holding) { P1.throw = true; sound_play(SOUND_JUMP); }}
-		if(JOY_BTN_B(pad1.press)) { if (!P1.holding) { sound_play(SOUND_JUMP); }}
-		
-		if(JOY_LEFT (pad1.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; } 
-		if(JOY_RIGHT(pad1.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
-		if(JOY_DOWN (pad1.value)) { P2.y += 1; P2.walking = true; }
-		if(JOY_UP   (pad1.value)) { P2.y -= 1; P2.walking = true; }
-		if(JOY_BTN_A(pad1.press)) { if (P2.holding) { P2.throw = true; sound_play(SOUND_JUMP); }}
-		if(JOY_BTN_B(pad1.press)) { if (!P2.holding) { sound_play(SOUND_JUMP); }}
+		handle_input();
 		
 		px_profile_start();
 		player = &P1;
@@ -478,9 +484,43 @@ static void game_loop(void){
 		
 		px_spr_end();
 		px_wait_nmi();
+		
+		if(JOY_START(pad1.value)) boss_loop();
 	}
 	
 	game_loop();
+}
+
+static void boss_loop(){
+	static u8 boss_hits;
+	
+	boss_hits = 0;
+	
+	while(true){
+		handle_input();
+		
+		P1.holding = true;
+		P1.item = items_hammer;
+		// Hack the timer to let the player rapidly tap
+		if(P1.throwFrameTimer > 8) P1.throwFrameTimer = 8;
+		if(JOY_BTN_A(pad1.press)){
+			// px_debug_hex(P1.y);
+			if(0xC0 < P1.x && 0x80 < P1.y && P1.y < 0xA0){
+				boss_hits++;
+			}
+		}
+		
+		player = &P1;
+		tick_player();
+		
+		px_debug_hex(boss_hits);
+		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
+		
+		px_spr_end();
+		px_wait_nmi();
+		
+		if(boss_hits > 32) break;
+	}
 }
 
 void main(void){
