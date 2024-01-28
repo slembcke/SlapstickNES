@@ -61,6 +61,13 @@ run-linux: rom
 run-win: rom
 	wintools/Mesen.exe $(ROM)
 
+BIN = $(ROM:.nes=.bin)
+$(BIN): $(ROM)
+	dd if=$< ibs=1 skip=16 > $@	
+
+romviz.png: $(BIN)
+	$(PX_TOOLS_PATH)/chr2png "1D 16 1A 11" $(BIN) $@
+
 $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 	$(LD) -C ld65.cfg --dbgfile $(ROM:.nes=.dbg) $(OBJS) $(PX_LIB) nes.lib -m link.log -o $@
 
@@ -90,10 +97,10 @@ $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 src/data.o: $(CHR:.png=.lz4) map/splash.lz4 map/map0.lz4 map/map1.lz4 
 
 tiles: chr/bgchr.chr
-	$(PX_TOOLS_PATH)/chr2png "1D 00 10 20" $< $(<:.chr=-pal0.png)
-	$(PX_TOOLS_PATH)/chr2png "1D 27 37 20" $< $(<:.chr=-pal1.png)
-	$(PX_TOOLS_PATH)/chr2png "1D 05 05 05" $< $(<:.chr=-pal2.png)
-	$(PX_TOOLS_PATH)/chr2png "1D 05 05 05" $< $(<:.chr=-pal3.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 01 11 21" $< $(<:.chr=-pal0.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 16 27 20" $< $(<:.chr=-pal1.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 16 24 20" $< $(<:.chr=-pal2.png)
+	$(PX_TOOLS_PATH)/chr2png "1D 02 02 02" $< $(<:.chr=-pal3.png)
 
 audio/sounds.s: audio/sounds.nsf ft2-tools
 	$(FT2_TOOLS_PATH)/nsf2data $< -ca65 -ntsc
