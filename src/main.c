@@ -6,7 +6,7 @@
 
 #define BG_COLOR 0x1D
 static const u8 PALETTE[] = {
-	BG_COLOR, 0x14, 0x24, 0x35,
+	BG_COLOR, 0x13, 0x22, 0x33,
 	BG_COLOR, 0x16, 0x27, 0x20,
 	BG_COLOR, 0x16, 0x27, 0x20,
 	BG_COLOR, 0x01, 0x11, 0x21,
@@ -633,6 +633,30 @@ static void deflate_uvula_and_sync(void){
 	px_buffer_blit(0x27E1, uvula + 12, 1);
 }
 
+static void draw_humor_bar(){
+	// gotta get this done!
+	if(smileScore >= 1*16) px_spr(168 + 0*8, 22, 0, 0xB3);
+	if(smileScore >= 2*16) px_spr(168 + 1*8, 22, 0, 0xB3);
+	if(smileScore >= 3*16) px_spr(168 + 2*8, 22, 0, 0xB3);
+	if(smileScore >= 4*16) px_spr(168 + 3*8, 22, 0, 0xB3);
+	if(smileScore >= 5*16) px_spr(168 + 4*8, 22, 0, 0xB3);
+	if(smileScore >= 6*16) px_spr(168 + 5*8, 22, 0, 0xB3);
+	if(smileScore >= 7*16) px_spr(168 + 6*8, 22, 0, 0xB3);
+	if(smileScore >= 8*16) px_spr(168 + 7*8, 22, 0, 0xB3);
+}
+
+static void draw_hit_bar(){
+	// gotta get this done!
+	if(bossHits < 8*4) px_spr(168 + 0*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 7*4) px_spr(168 + 1*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 6*4) px_spr(168 + 2*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 5*4) px_spr(168 + 3*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 4*4) px_spr(168 + 4*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 3*4) px_spr(168 + 5*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 2*4) px_spr(168 + 6*8 - PX.scroll_x, 22, 0, 0xB3);
+	if(bossHits < 1*4) px_spr(168 + 7*8 - PX.scroll_x, 22, 0, 0xB3);
+}
+
 static void boss_loop(void);
 
 static void game_loop(void){
@@ -699,13 +723,13 @@ static void game_loop(void){
 		PX.scroll_x = 0;
 		handle_input();
 
-		px_profile_start();
+		// px_profile_start();
 		player = &P1;
 		tick_player();
 
 		player = &P2;
 		tick_player();
-		px_profile_end();
+		// px_profile_end();
 
 		for (idx = 0; idx < 4; idx++) {
 			if (pickupsR[idx] > 1) {
@@ -730,11 +754,13 @@ static void game_loop(void){
 				case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
 			}
 		}
+		
+		draw_humor_bar();
 
 		px_spr_end();
 		px_wait_nmi();
 
-		if(JOY_START(pad1.press)) smileScore += 64;
+		if(JOY_START(pad1.press)) smileScore += 16;
 		if(smileScore/64 != smileShown){
 			smileShown = smileScore/64;
 			show_smile_and_sync(smileShown == 0 ? SMILE_FROWN : SMILE_GRIN);
@@ -796,8 +822,7 @@ static void boss_loop(){
 		tick_player();
 		player_boss_tick();
 
-		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
-
+		draw_hit_bar();
 		px_spr_end();
 		px_wait_nmi();
 
@@ -807,7 +832,7 @@ static void boss_loop(){
 			px_buffer_set_color(10, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
 		}
 
-		if(bossHits > 4){
+		if(bossHits > 32){
 			bossStage++;
 			break;
 		}
