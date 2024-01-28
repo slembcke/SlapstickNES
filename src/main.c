@@ -356,6 +356,7 @@ enum {
 	items_bomb,
 	items_splosion,
 	hazard_peel,
+	hazard_pie,
 };
 
 static u8 pickupsX[5];
@@ -365,7 +366,7 @@ static u8 pickupsP[5];
 static u8 pickupsR[5];
 static u8 pickupsS[5];
 
-#define HAZARD_COUNT 1
+#define HAZARD_COUNT 2 // [banana, pie]
 static u8 hazardsT[HAZARD_COUNT]; // type
 static u8 hazardsX[HAZARD_COUNT];
 static u8 hazardsY[HAZARD_COUNT];
@@ -388,7 +389,7 @@ typedef struct {
 
 static Player P1, P2;
 static Player* player;
-static u8 bossStage = 0;
+static u8 bossStage = 0; // 0 = teeth, 1 = cracked, 2 = uvula, 3 = done
 static u8 bossHits;
 static bool boss_smack;
 static u8 smileScore = 0; // 0 to 128
@@ -532,6 +533,11 @@ static void tick_player(){
 		}
 	}
 
+	if(player->pieFaceTimer > 0){
+		px_spr(x + (player->walkRight ? 0 : -8), y - 8 - player->pieFaceTimer/8, 1 | (player->walkRight ? 0 : PX_SPR_FLIPX), 0xC2);
+		player->pieFaceTimer--;
+	}
+
 	// Draw a sprite.
 	if (player->walking) {
 		if (player->walkRight) {
@@ -605,9 +611,18 @@ static void tick_player(){
 	for(idx = 0; idx < HAZARD_COUNT; idx++){
 		switch(hazardsT[idx]){
 			case hazard_peel:
-				// slip on banana
 				if (hazardsA[idx] && abs((s16)x-(s16)hazardsX[idx]) < 8 && abs((s16)y-(s16)hazardsY[idx]) < 8) {
 					player->slipping = true;
+					hazardsA[idx] = false;
+					hazardsX[idx] = -8;
+					hazardsY[idx] = -8;
+					smileScore += 16;
+				}
+				break;
+			case hazard_pie:
+				px_debug_hex(abs((s16)y - (s16)hazardsY[idx] - 18));
+				if (hazardsA[idx] && abs((s16)x-(s16)hazardsX[idx]) < 8 && abs((s16)y - (s16)hazardsY[idx] - 18) < 8) {
+					player->pieFaceTimer = 60;
 					hazardsA[idx] = false;
 					hazardsX[idx] = -8;
 					hazardsY[idx] = -8;
@@ -647,6 +662,12 @@ static void handle_input(){
 					hazardsX[0] = P1.x + (P1.walkRight ? 16 : -16);
 					hazardsY[0] = P1.y;
 				}
+				else if(P1.item == items_pie){
+					hazardsA[1] = true;
+					hazardsX[1] = P1.x + (P1.walkRight ? 16 : -16);
+					hazardsY[1] = P1.y - 18;
+					hazardsP[1] = 1 | (P1.walkRight ? PX_SPR_FLIPX : 0);
+				}
 				sound_play(SOUND_JUMP);
 			}
 		}
@@ -655,7 +676,7 @@ static void handle_input(){
 
 	if(P2.slipping){
 		P2.x += (P2.walkRight ? 2: -2);
-		if(P1.x < 0x24 || 0xC0 < P1.x) P1.slipping = false;
+		if(P2.x < 0x24 || 0xC0 < P2.x) P2.slipping = false;
 	} else {
 		if(JOY_LEFT (pad2.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; }
 		if(JOY_RIGHT(pad2.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
@@ -674,6 +695,12 @@ static void handle_input(){
 					hazardsA[0] = true;
 					hazardsX[0] = P2.x + (P2.walkRight ? 16 : -16);
 					hazardsY[0] = P2.y;
+				}
+				else if(P2.item == items_pie){
+					hazardsA[1] = true;
+					hazardsX[1] = P2.x + (P2.walkRight ? 16 : -16);
+					hazardsY[1] = P2.y - 18;
+					hazardsP[1] = 1 | (P2.walkRight ? PX_SPR_FLIPX : 0);
 				}
 				sound_play(SOUND_JUMP);
 			}
@@ -840,6 +867,13 @@ static void game_loop(void){
 	hazardsP[0] = 0;
 	hazardsA[0] = false;
 
+	hazardsT[1] = hazard_pie;
+	hazardsX[1] = -8;
+	hazardsY[1] = -8;
+	hazardsS[1] = 0xC2;
+	hazardsP[1] = 1 | PX_SPR_FLIPX;
+	hazardsA[1] = true;
+
 	px_ppu_sync_disable();{
 		// load the palettes
 		px_addr(PAL_ADDR);
@@ -890,6 +924,11 @@ static void game_loop(void){
 		}
 		
 		for (idx = 0; idx < HAZARD_COUNT; idx++) {
+			if(hazardsT[idx] == hazard_pie){
+				hazardsX[idx] -= (hazardsP[idx] & PX_SPR_FLIPX ? -2 : 2);
+				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]) hazardsY[idx] = -8;
+			}
+			
 			// draw hazards
 			px_spr(hazardsX[idx],hazardsY[idx],hazardsP[idx],hazardsS[idx]);
 		}
