@@ -453,6 +453,8 @@ static void tick_player(){
 				P2.splodedTimer = 128;
 				smileScore += 16;
 			}
+			
+			sound_play(SOUND_DROP);
 		}
 	}
 
@@ -622,6 +624,7 @@ static void tick_player(){
 			pickupsR[idx] = 100;
 			player->item = pickupsT[idx];
 			player->holding = true;
+			sound_play(SOUND_PICKUP);
 		}
 	}
 
@@ -634,6 +637,8 @@ static void tick_player(){
 					hazardsX[idx] = -8;
 					hazardsY[idx] = -8;
 					smileScore += 16;
+			
+					sound_play(SOUND_DROP);
 				}
 				break;
 			case hazard_pie:
@@ -644,6 +649,8 @@ static void tick_player(){
 					hazardsX[idx] = -8;
 					hazardsY[idx] = -8;
 					smileScore += 16;
+			
+					sound_play(SOUND_DROP);
 				}
 				break;
 			default: break;
@@ -672,6 +679,7 @@ static void handle_input(){
 					if (abs((s16)P1.x-(s16)P2.x) <= 24 && abs((s16)P1.y-(s16)P2.y) <= 24) {
 						P2.hammerHitTimer = 24;
 						smileScore += 16;
+						sound_play(SOUND_DROP);
 					}
 				}
 				else if (P1.item == items_banana) {
@@ -692,6 +700,7 @@ static void handle_input(){
 						P2.splodedTimer = 128;
 						smileScore += 16;
 					}
+					sound_play(SOUND_DROP);
 				}
 				else if(P1.item == items_pie){
 						hazardsA[1] = true;
@@ -720,6 +729,7 @@ static void handle_input(){
 					if (abs((s16)P2.x-(s16)P1.x) <= 24 && abs((s16)P2.y-(s16)P1.y) <= 24) {
 						P1.hammerHitTimer = 24;
 						smileScore += 16;
+						sound_play(SOUND_DROP);
 					}
 				}
 				else if (P2.item == items_banana) {
@@ -740,6 +750,7 @@ static void handle_input(){
 						P1.splodedTimer = 128;
 						smileScore += 16;
 					}
+					sound_play(SOUND_DROP);
 				}
 				else if(P2.item == items_pie){
 					hazardsA[1] = true;
@@ -995,6 +1006,7 @@ static void game_loop(void){
 		}
 
 		if(smileScore >= 128){
+			sound_play(SOUND_MATCH);
 			boss_loop();
 
 			smileScore = 0;
@@ -1045,7 +1057,7 @@ static void boss_loop(){
 		if(bossStage >= 2 && PX.scroll_x < 88) PX.scroll_x += 2;
 		if(bossStage >= 3 && PX.scroll_x < 256) PX.scroll_x += 1;
 		frame = px_ticks%96/4;
-		if (frame < 8) {
+		if (frame < 8  && bossStage < 2) {
 			meta_spr(200-PX.scroll_x,120,2,anim_AIR_PUFF[px_ticks/8%3]);
 		}
 
@@ -1103,7 +1115,9 @@ static void boss_loop(){
 
 		if(boss_smack){
 			px_buffer_set_color(10, 0x06);
-		} else{
+			sound_play(SOUND_DROP);
+		} 
+		else {
 			px_buffer_set_color(10, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
 		}
 
