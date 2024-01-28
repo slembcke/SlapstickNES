@@ -598,6 +598,7 @@ static void tick_player(){
 		(OAM - 16)[px_sprite_cursor] += 4;
 		(OAM - 20)[px_sprite_cursor] += 8;
 		(OAM - 24)[px_sprite_cursor] += 8;
+		if(player->holding) (OAM - 28)[px_sprite_cursor] += 8;
 	}
 
 	for (idx = 1; idx < 5; idx++) {
