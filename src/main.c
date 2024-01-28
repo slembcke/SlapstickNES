@@ -912,7 +912,7 @@ static void game_loop(void){
 	show_smile_and_sync(SMILE_FROWN);
 
 	while(true){
-		PX.scroll_x = 0;
+		if(PX.scroll_x > 0) PX.scroll_x--;
 		handle_input();
 
 		// px_profile_start();
@@ -933,7 +933,6 @@ static void game_loop(void){
 						}
 						break;
 					case items_banana:
-						px_debug_hex(px_ticks);
 						if (hazardsA[0] == false && P1.item != items_banana && P2.item != items_banana) {
 							pickupsX[idx] = 48 + rand8()/2; pickupsY[idx] = 64 + rand8()/2;
 							pickupsR[idx] = 0;
@@ -955,12 +954,14 @@ static void game_loop(void){
 			}
 			if (pickupsR[idx] > 1) pickupsR[idx] -= 1;
 
-			// draw pickups
-			switch (pickupsT[idx]) {
-				case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
-				case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
-				case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
-				case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
+		if(PX.scroll_x == 0){
+				// draw pickups
+				switch (pickupsT[idx]) {
+					case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
+					case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
+					case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
+					case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
+				}
 			}
 		}
 
@@ -972,15 +973,18 @@ static void game_loop(void){
 					hazardsA[idx] = false;
 				}
 			}
+			
+			// hacky bug fix, don't allow the peel to sit under the clown
+			if(hazardsT[idx] == hazard_peel){
+				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]){
+					hazardsY[idx] = -8;
+					hazardsA[idx] = false;
+				}
+			}
 
 			// draw hazards
 			px_spr(hazardsX[idx],hazardsY[idx],hazardsP[idx],hazardsS[idx]);
 		}
-
-		// HAZARDS
-
-
-		//meta_spr(100,100,1,splosion);
 
 		draw_humor_bar();
 
