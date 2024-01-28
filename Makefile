@@ -61,6 +61,13 @@ run-linux: rom
 run-win: rom
 	wintools/Mesen.exe $(ROM)
 
+BIN = $(ROM:.nes=.bin)
+$(BIN): $(ROM)
+	dd if=$< ibs=1 skip=16 > $@	
+
+romviz.png: $(BIN)
+	$(PX_TOOLS_PATH)/chr2png "1D 16 1A 11" $(BIN) $@
+
 $(ROM): ld65.cfg $(OBJS) $(PX_LIB)
 	$(LD) -C ld65.cfg --dbgfile $(ROM:.nes=.dbg) $(OBJS) $(PX_LIB) nes.lib -m link.log -o $@
 
