@@ -521,12 +521,13 @@ static void tick_player(){
 		}
 	}
 	
+	// super rushed hack:
+	// reach into sprite memory and squish existing sprites down when hammered
 	if(player->palette == 1){
-		// super rushed hack, reach into sprite memory and move existing sprites down
-		(OAM - 12)[px_sprite_cursor] += 4; // y
-		(OAM - 16)[px_sprite_cursor] += 4; // y
-		(OAM - 20)[px_sprite_cursor] += 8; // y
-		(OAM - 24)[px_sprite_cursor] += 8; // y
+		(OAM - 12)[px_sprite_cursor] += 4;
+		(OAM - 16)[px_sprite_cursor] += 4;
+		(OAM - 20)[px_sprite_cursor] += 8;
+		(OAM - 24)[px_sprite_cursor] += 8;
 	}
 
 	for (idx = 1; idx < 5; idx++) {
