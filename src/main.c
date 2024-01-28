@@ -486,15 +486,31 @@ static const u8 SMILE_BROKEN[] = {
 };
 
 static void show_smile_and_sync(const u8* smile){
-	px_buffer_blit(0x21BB, smile + 0x00, 2);
-	px_buffer_blit(0x21DB, smile + 0x02, 2);
-	px_buffer_blit(0x21FA, smile + 0x04, 4);
-	px_buffer_blit(0x221A, smile + 0x08, 4);
-	px_buffer_blit(0x223A, smile + 0x0C, 4);
-	px_buffer_blit(0x225A, smile + 0x10, 4);
-	px_buffer_blit(0x227A, smile + 0x14, 4);
+	px_buffer_blit(0x21BB, smile +  0, 2);
+	px_buffer_blit(0x21DB, smile +  2, 2);
+	px_buffer_blit(0x21FA, smile +  4, 4);
+	px_buffer_blit(0x221A, smile +  8, 4);
+	px_buffer_blit(0x223A, smile + 12, 4);
+	px_buffer_blit(0x225A, smile + 16, 4);
+	px_buffer_blit(0x227A, smile + 20, 4);
 	px_wait_nmi();
+}
+
+static void deflate_uvula_and_sync(void){
+	static const u8 uvula[] = {
+		0x00, 0x91, 0x00,
+		0xA0, 0xA1, 0xA2,
+		0xB0, 0xB1, 0xB2,
+		0xC0, 0xC1, 0x00,
+		0b01010101,
+	};
 	
+	px_buffer_blit(0x25C5, uvula + 0, 3);
+	px_buffer_blit(0x25E5, uvula + 3, 3);
+	px_buffer_blit(0x2605, uvula + 6, 3);
+	px_buffer_blit(0x2625, uvula + 9, 3);
+	px_buffer_blit(0x27D9, uvula + 12, 1);
+	px_buffer_blit(0x27E1, uvula + 12, 1);
 }
 
 static void boss_loop(void);
@@ -627,7 +643,8 @@ static void boss_loop(){
 	switch(bossStage){
 		case 0: show_smile_and_sync(SMILE_TOOTHY); break;
 		case 1: show_smile_and_sync(SMILE_CRACKED); break;
-		default: show_smile_and_sync(SMILE_BROKEN); break;
+		default: deflate_uvula_and_sync(); // fallthrough
+		case 2: show_smile_and_sync(SMILE_BROKEN); break;
 	}
 	
 	while(true){
