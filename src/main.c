@@ -277,7 +277,7 @@ static const u8 splosion[] = {
 	-8, -8, 0xD6, 1,
 	 0, -8, 0xD7, 1,
 	 8, -8, 0xD8, 1,
-
+	 
 	-8,  0, 0xE6, 1,
 	 0,  0, 0xE7, 1,
 	 8,  0, 0xE8, 1,
@@ -376,7 +376,7 @@ typedef struct {
 	u16 x, y;
 	bool walking, walkRight;
 	bool holding, throw;
-	bool slipping;
+bool slipping;
 	u8 throwFrameTimer, item;
 	u8 pieFaceTimer, bananaSlipTimer;
 	u8 panHitTimer, hammerHitTimer;
@@ -439,8 +439,10 @@ static void tick_player(){
 		if (px_ticks/8%18 == 17) {
 			player->holding = true;
 			player->item = items_splosion;
-			// player->splodedTimer = 128;
-			if (P1.x+8 > x-8 && P1.x-24 < x+16 && P1.y > y-24+8 && P1.y < y-24-16) {
+			player->splodedTimer = 128;
+			smileScore += 16;
+			/*
+			if ((P1.x+8) > (x-8) && P1.y > y-24-16) {
 				P1.palette = 3;
 				P1.splodedTimer = 128;
 			}
@@ -448,6 +450,7 @@ static void tick_player(){
 				P2.palette = 3;
 				P1.splodedTimer = 128;
 			}
+			*/
 		}
 	}
 
@@ -457,7 +460,7 @@ static void tick_player(){
 			player->holding = false;
 		}
 	}
-
+	
 
 	// TIMERS
 	if (player->hammerHitTimer > 1) {
@@ -512,7 +515,7 @@ static void tick_player(){
 				case items_hammer: 	px_spr(x-8, y-24, behind|pickupsP[1], 0xB0); break;
 				case items_pie: 	px_spr(x-8, y-24, pickupsP[2], 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, pickupsP[3], 0xB2); break;
-				case items_bomb:
+				case items_bomb: 	
 					meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]);
 				break;
 				case items_splosion: meta_spr(x, y-24, pickupsP[5], splosion); break;
@@ -523,8 +526,8 @@ static void tick_player(){
 				case items_hammer: 	px_spr(x, y-24, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
 				case items_pie: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xC0); break;
 				case items_banana: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xB2); break;
-				case items_bomb:
-					meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]);
+				case items_bomb: 	
+					meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); 
 				break;
 				case items_splosion: meta_spr(x, y-24, pickupsP[5], splosion); break;
 			}
@@ -581,7 +584,7 @@ static void tick_player(){
 		}
 	}
 
-	// super rushed hack:
+// super rushed hack:
 	// reach into sprite memory and squish existing sprites down when hammered
 	if(player->palette == 1){
 		(OAM - 12)[px_sprite_cursor] += 4;
@@ -591,7 +594,21 @@ static void tick_player(){
 	}
 
 	for (idx = 1; idx < 5; idx++) {
-		// grab pickups
+		if (pickupsR[idx] > 1) {
+			pickupsR[idx] -= 1;
+		}
+		else {
+			if (pickupsR[idx] <= 1) {
+				pickupsR[idx] = 0;
+				switch (pickupsT[idx]) {
+					case items_hammer: 	if (player->item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
+					case items_pie: 	if (player->item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
+					case items_banana: 	if (hazardsA[0] == false && player->item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
+					case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
+				}
+			}
+		}
+
 		if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
 			pickupsX[idx] = -8;
 			pickupsY[idx] = -8;
@@ -626,7 +643,7 @@ static void handle_input(){
 		if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
 		if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
 		if(JOY_BTN_A(pad1.press)) {
-			if (P1.holding) {
+			if (P1.holding && P1.item != items_splosion) {
 				P1.throw = true;
 				if (P1.item == items_hammer) {
 					if (abs((s16)P1.x-(s16)P2.x) <= 24 && abs((s16)P1.y-(s16)P2.y) <= 24) {
@@ -646,15 +663,15 @@ static void handle_input(){
 	}
 
 	if(P2.slipping){
-		P2.x += (P2.walkRight ? 2: -2);
-		if(P1.x < 0x24 || 0xC0 < P1.x) P1.slipping = false;
+			P2.x += (P2.walkRight ? 2: -2);
+			if(P1.x < 0x24 || 0xC0 < P1.x) P1.slipping = false;
 	} else {
 		if(JOY_LEFT (pad2.value)) { P2.x -= 1; P2.walking = true; P2.walkRight = false; }
 		if(JOY_RIGHT(pad2.value)) { P2.x += 1; P2.walking = true; P2.walkRight = true; }
 		if(JOY_DOWN (pad2.value)) { P2.y += 1; P2.walking = true; }
 		if(JOY_UP   (pad2.value)) { P2.y -= 1; P2.walking = true; }
 		if(JOY_BTN_A(pad2.press)) {
-			if (P2.holding) {
+			if (P2.holding && P2.item != items_splosion) {
 				P2.throw = true;
 				if (P2.item == items_hammer) {
 					if (abs((s16)P2.x-(s16)P1.x) <= 24 && abs((s16)P2.y-(s16)P1.y) <= 24) {
@@ -887,7 +904,7 @@ static void game_loop(void){
 		}
 
 		// HAZARDS
-
+		
 
 		//meta_spr(100,100,1,splosion);
 
