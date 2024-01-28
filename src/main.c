@@ -350,12 +350,13 @@ static u8 pickupsP[5];
 static u8 pickupsR[5];
 static u8 pickupsS[5];
 
-static u8 hazardsT[1]; // type
-static u8 hazardsX[1];
-static u8 hazardsY[1];
-static u8 hazardsS[1]; // sprite
-static u8 hazardsP[1]; // palette
-static u8 hazardsA[1]; // active
+#define HAZARD_COUNT 1
+static u8 hazardsT[HAZARD_COUNT]; // type
+static u8 hazardsX[HAZARD_COUNT];
+static u8 hazardsY[HAZARD_COUNT];
+static u8 hazardsS[HAZARD_COUNT]; // sprite
+static u8 hazardsP[HAZARD_COUNT]; // palette
+static u8 hazardsA[HAZARD_COUNT]; // active
 
 typedef struct {
 	u16 x, y;
@@ -363,7 +364,7 @@ typedef struct {
 	bool holding, throw;
 	bool slipping;
 	u8 throwFrameTimer, item;
-	u8 pieFaceTimer, bananaSlipTimer;
+	u8 pieFaceTimer;
 	u8 panHitTimer, hammerHitTimer;
 	u8 palette_base;
 	u8 palette;
@@ -543,13 +544,20 @@ static void tick_player(){
 		}
 	}
 	
-	// slip on banana
-	if (hazardsA[0] && abs((s16)x-(s16)hazardsX[0]) < 8 && abs((s16)y-(s16)hazardsY[0]) < 8) {
-		player->slipping = true;
-		hazardsA[0] = false;
-		hazardsX[0] = -8;
-		hazardsY[0] = -8;
-		smileScore += 16;
+	for(idx = 0; idx < HAZARD_COUNT; idx++){
+		switch(hazardsT[idx]){
+			case hazard_peel:
+				// slip on banana
+				if (hazardsA[idx] && abs((s16)x-(s16)hazardsX[idx]) < 8 && abs((s16)y-(s16)hazardsY[idx]) < 8) {
+					player->slipping = true;
+					hazardsA[idx] = false;
+					hazardsX[idx] = -8;
+					hazardsY[idx] = -8;
+					smileScore += 16;
+				}
+				break;
+			default: break;
+		}
 	}
 }
 
@@ -818,7 +826,7 @@ static void game_loop(void){
 			}
 		}
 		
-		for (idx = 0; idx < 1; idx++) {
+		for (idx = 0; idx < HAZARD_COUNT; idx++) {
 			// draw hazards
 			px_spr(hazardsX[idx],hazardsY[idx],hazardsP[idx],hazardsS[idx]);
 		}
