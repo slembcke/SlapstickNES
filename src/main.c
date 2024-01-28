@@ -264,14 +264,45 @@ typedef struct {
 
 static Player P1, P2;
 static Player* player;
+static u8 bossStage = 0;
+static u8 bossHits;
+static bool boss_smack;
+static u8 smileScore = 0; // 0 to 128
+static u8 smileShown = 0; // 0 = frown, 1 = grin
 
 static void tick_player(){
+	static u8 player_flags, behind;
 	static u16 x, y;
+	
+	behind = 0;
+	player_flags = player->palette;
 	
 	if(player->x < 36 + PX.scroll_x) player->x = 36 + PX.scroll_x;
 	if(player->x > 220 + PX.scroll_x) player->x = 220 + PX.scroll_x;
 	if(player->y < 68) player->y = 68;
 	if(player->y > 196) player->y = 196;
+	
+	if(smileScore < 128 || bossStage < 2){
+		if(player->x > 0xCC && 0x48 < player->y && player->y < 0xA0){
+			player->x -= 16;
+		}
+	} else {
+		if(0x4E < player->y && player->y < 0xA2){
+			if(player->x > 0xCC){
+				behind = PX_SPR_BEHIND;
+				player_flags |= PX_SPR_BEHIND;
+				if(player->y < 0x90) player->y += 1;
+				if(player->y > 0x90) player->y -= 1;
+				
+				if(player->x > 256) player->y = 0x90;
+			}
+		} else {
+			if(player->x > 220){
+				player->x = 220;
+			}
+		}
+	}
+	
 	x = (u16)player->x - PX.scroll_x, y = player->y;
 	
 	if (player->throw) {
@@ -286,7 +317,7 @@ static void tick_player(){
 	if (player->throw) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x+8, y-8, pickupsP[0], 0xB1); break;
+				case items_hammer: 	px_spr(x+8, y-8, behind|pickupsP[0], 0xB1); break;
 				case items_pie: 	px_spr(x+8, y-8, pickupsP[1], 0xC1); break;
 				case items_banana: 	px_spr(x+8, y-8, pickupsP[2], 0xB3); break;
 				case items_bomb: 	px_spr(x+8, y-8, pickupsP[3], 0xC4); break;
@@ -294,7 +325,7 @@ static void tick_player(){
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-16, y-8, pickupsP[0]|PX_SPR_FLIPX, 0xB1); break;
+				case items_hammer: 	px_spr(x-16, y-8, behind|pickupsP[0]|PX_SPR_FLIPX, 0xB1); break;
 				case items_pie: 	px_spr(x-16, y-8, pickupsP[1]|PX_SPR_FLIPX, 0xC1); break;
 				case items_banana: 	px_spr(x-16, y-8, pickupsP[2]|PX_SPR_FLIPX, 0xB3); break;
 				case items_bomb: 	px_spr(x-16, y-8, pickupsP[3]|PX_SPR_FLIPX, 0xC4); break;
@@ -304,7 +335,7 @@ static void tick_player(){
 	else if (player->holding) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-8, y-24, pickupsP[0], 0xB0); break;
+				case items_hammer: 	px_spr(x-8, y-24, behind|pickupsP[0], 0xB0); break;
 				case items_pie: 	px_spr(x-8, y-24, pickupsP[1], 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, pickupsP[2], 0xB2); break;
 				case items_bomb: 	px_spr(x-8, y-24, pickupsP[3], 0xC4); break;
@@ -312,7 +343,7 @@ static void tick_player(){
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x, y-24, pickupsP[0]|PX_SPR_FLIPX, 0xB0); break;
+				case items_hammer: 	px_spr(x, y-24, behind|pickupsP[0]|PX_SPR_FLIPX, 0xB0); break;
 				case items_pie: 	px_spr(x, y-24, pickupsP[1]|PX_SPR_FLIPX, 0xC0); break;
 				case items_banana: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xB2); break;
 				case items_bomb: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xC4); break;
@@ -324,48 +355,48 @@ static void tick_player(){
 	if (player->walking) {
 		if (player->walkRight) {
 			if (player->throw) {
-				meta_spr(x, y, player->palette, anim_walk_right_throwing[px_ticks/8%2]);
+				meta_spr(x, y, player_flags, anim_walk_right_throwing[px_ticks/8%2]);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, player->palette, anim_walk_right_holding[px_ticks/8%2]);
+				meta_spr(x, y, player_flags, anim_walk_right_holding[px_ticks/8%2]);
 			}
 			else {
-				meta_spr(x, y, player->palette, anim_walk_right[px_ticks/8%2]);
+				meta_spr(x, y, player_flags, anim_walk_right[px_ticks/8%2]);
 			}
 		}
 		else {
 			if (player->throw) {
-				meta_spr(x, y, player->palette, anim_walk_left_throwing[px_ticks/8%2]);
+				meta_spr(x, y, player_flags, anim_walk_left_throwing[px_ticks/8%2]);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, player->palette, anim_walk_left_holding[px_ticks/8%2]);
+				meta_spr(x, y, player_flags, anim_walk_left_holding[px_ticks/8%2]);
 			}
 			else {
-				meta_spr(x, y, player->palette, anim_walk_left[px_ticks/8%2]);
+				meta_spr(x, y, player_flags, anim_walk_left[px_ticks/8%2]);
 			}
 		}
 	}
 	else {
 		if (player->walkRight) {
 			if (player->throw) {
-				meta_spr(x, y, player->palette, META_R1_THROWING);
+				meta_spr(x, y, player_flags, META_R1_THROWING);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, player->palette, META_R1_HOLDING);
+				meta_spr(x, y, player_flags, META_R1_HOLDING);
 			}
 			else {
-				meta_spr(x, y, player->palette, META_R1);
+				meta_spr(x, y, player_flags, META_R1);
 			}
 		}
 		else {
 			if (player->throw) {
-				meta_spr(x, y, player->palette, META_L1_THROWING);
+				meta_spr(x, y, player_flags, META_L1_THROWING);
 			}
 			else if (player->holding) {
-				meta_spr(x, y, player->palette, META_L1_HOLDING);
+				meta_spr(x, y, player_flags, META_L1_HOLDING);
 			}
 			else {
-				meta_spr(x, y, player->palette, META_L1);
+				meta_spr(x, y, player_flags, META_L1);
 			}
 		}
 	}
@@ -467,9 +498,6 @@ static void show_smile_and_sync(const u8* smile){
 static void boss_loop(void);
 
 static void game_loop(void){
-	static u8 smileScore = 0;
-	static u8 smileShown = 0;
-	
 	P1.x = 128, P1.y = 128;
 	P1.throwFrameTimer = 24;
 	P1.palette = 0;
@@ -570,21 +598,22 @@ static void game_loop(void){
 	game_loop();
 }
 
-static u8 bossStage = 0;
-static u8 bossHits;
-static bool boss_smack;
-
 static void player_boss_tick(){
 	player->holding = true;
 	player->item = items_hammer;
 	// Hack the timer to let the player rapidly tap
 	if(player->throwFrameTimer > 6) player->throwFrameTimer = 6;
+	
+	// px_debug_hex_addr = NT_ADDR(0, 16, 2);
+	// px_debug_hex(P1.y);
+	
 	// Even more total hackery with the frame timer here...
 	if(player->throwFrameTimer == 5 && player->walkRight){
 		// px_debug_hex(P1.y);
-		if(0xC0 < player->x && 0x80 < player->y && player->y < 0xA0){
+		if(bossStage < 2 && 0xC0 < player->x && 0x80 < player->y && player->y < 0x94){
 			bossHits++;
 			boss_smack = true;
+		} else if(bossStage >= 2){
 		}
 	}
 }
@@ -609,9 +638,9 @@ static void boss_loop(){
 		tick_player();
 		player_boss_tick();
 		
-		player = &P2;
-		tick_player();
-		player_boss_tick();
+		// player = &P2;
+		// tick_player();
+		// player_boss_tick();
 		
 		// px_debug_hex(bossHits);
 		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
@@ -625,7 +654,6 @@ static void boss_loop(){
 			px_buffer_set_color(10, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
 		}
 		
-		px_debug_hex((px_ticks & 1) == 0);
 		if(bossHits > 4){
 			bossStage++;
 			break;
