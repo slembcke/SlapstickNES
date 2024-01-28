@@ -409,7 +409,7 @@ static void tick_player(){
 	if (player->throw) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x+8, y-8, pickupsP[1], 0xB1); break;
+				case items_hammer: 	px_spr(x+8, y-8, behind|pickupsP[1], 0xB1); break;
 				case items_pie: 	px_spr(x+8, y-8, pickupsP[2], 0xC1); break;
 				case items_banana: 	px_spr(x+8, y-8, pickupsP[3], 0xB3); break;
 				case items_bomb: 	meta_spr(x+8, y-8, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -417,7 +417,7 @@ static void tick_player(){
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-16, y-8, pickupsP[1]|PX_SPR_FLIPX, 0xB1); break;
+				case items_hammer: 	px_spr(x-16, y-8, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB1); break;
 				case items_pie: 	px_spr(x-16, y-8, pickupsP[2]|PX_SPR_FLIPX, 0xC1); break;
 				case items_banana: 	px_spr(x-16, y-8, pickupsP[3]|PX_SPR_FLIPX, 0xB3); break;
 				case items_bomb: 	meta_spr(x-16, y-8, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -427,7 +427,7 @@ static void tick_player(){
 	else if (player->holding) {
 		if (player->walkRight) {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x-8, y-24, pickupsP[1], 0xB0); break;
+				case items_hammer: 	px_spr(x-8, y-24, behind|pickupsP[1], 0xB0); break;
 				case items_pie: 	px_spr(x-8, y-24, pickupsP[2], 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, pickupsP[3], 0xB2); break;
 				case items_bomb: 	meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -435,7 +435,7 @@ static void tick_player(){
 		}
 		else {
 			switch (player->item) {
-				case items_hammer: 	px_spr(x, y-24, pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
+				case items_hammer: 	px_spr(x, y-24, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
 				case items_pie: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xC0); break;
 				case items_banana: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xB2); break;
 				case items_bomb: 	meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
@@ -495,34 +495,12 @@ static void tick_player(){
 
 
 	for (idx = 1; idx < 5; idx++) {
-		if (pickupsR[idx] > 1) {
-			pickupsR[idx] -= 1;
-		}
-		else {
-			if (pickupsR[idx] <= 1) {
-				pickupsR[idx] = 0;
-				switch (pickupsT[idx]) {
-					case items_hammer: 	if (player->item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
-					case items_pie: 	if (player->item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
-					case items_banana: 	if (hazardsA[0] == false && player->item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
-					case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
-				}
-			}
-		}
-
 		if (abs((s16)x-(s16)pickupsX[idx]) < 8 && abs((s16)y-(s16)pickupsY[idx]) < 8 && !player->holding) {
 			pickupsX[idx] = -8;
 			pickupsY[idx] = -8;
 			pickupsR[idx] = 100;
 			player->item = pickupsT[idx];
 			player->holding = true;
-		}
-
-		switch (pickupsT[idx]) {
-			case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
-			case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
-			case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
-			case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
 		}
 	}
 
@@ -734,12 +712,12 @@ static void game_loop(void){
 				pickupsR[idx] -= 1;
 			}
 			else {
-				if (pickupsR[idx] == 1) {
+				if (pickupsR[idx] <= 1) {
 					pickupsR[idx] = 0;
 					switch (pickupsT[idx]) {
-						case items_hammer: 	pickupsX[idx] = 48; pickupsY[idx] = 72; break;
-						case items_pie: 	pickupsX[idx] = 64; pickupsY[idx] = 72; break;
-						case items_banana: 	pickupsX[idx] = 80; pickupsY[idx] = 72; break;
+						case items_hammer: 	if (player->item != items_hammer) { pickupsX[idx] = 48; pickupsY[idx] = 72; } break;
+						case items_pie: 	if (player->item != items_pie) {pickupsX[idx] = 64; pickupsY[idx] = 72; } break;
+						case items_banana: 	if (hazardsA[0] == false && player->item != items_banana) { pickupsX[idx] = 80; pickupsY[idx] = 72; } break;
 						case items_bomb: 	pickupsX[idx] = 96; pickupsY[idx] = 72; break;
 					}
 				}
