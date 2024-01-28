@@ -12,11 +12,12 @@ extern u8 MAP0[];
 extern u8 MAP1[];
 
 // misc.s declarations:
-extern u8 ix, iy, idx, tmp;
+extern u8 ix, iy, idx, tmp, px_sprite_cursor;
 #pragma zpsym("ix");
 #pragma zpsym("iy");
 #pragma zpsym("idx");
 #pragma zpsym("tmp");
+#pragma zpsym("px_sprite_cursor");
 
 // audio.s declarations:
 typedef struct AudioChunk AudioChunk;

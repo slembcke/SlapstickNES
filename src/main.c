@@ -520,7 +520,14 @@ static void tick_player(){
 			}
 		}
 	}
-
+	
+	if(player->palette == 1){
+		// super rushed hack, reach into sprite memory and move existing sprites down
+		(OAM - 12)[px_sprite_cursor] += 4; // y
+		(OAM - 16)[px_sprite_cursor] += 4; // y
+		(OAM - 20)[px_sprite_cursor] += 8; // y
+		(OAM - 24)[px_sprite_cursor] += 8; // y
+	}
 
 	for (idx = 1; idx < 5; idx++) {
 		if (pickupsR[idx] > 1) {
@@ -771,7 +778,7 @@ static void game_loop(void){
 		PX.scroll_x = 0;
 		handle_input();
 
-		px_profile_start();
+		// px_profile_start();
 		player = &P1;
 		tick_player();
 

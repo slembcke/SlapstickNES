@@ -16,6 +16,8 @@ _iy: .word 0
 _idx: .word 0
 _tmp: .word 0
 
+.exportzp _px_sprite_cursor = px_sprite_cursor
+
 .code
 
 .export _meta_spr
