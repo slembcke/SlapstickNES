@@ -451,7 +451,6 @@ static void tick_player(){
 				P2.splodedTimer = 128;
 				smileScore += 16;
 			}
-			
 		}
 	}
 
@@ -657,6 +656,22 @@ static void handle_input(){
 					hazardsX[0] = P1.x + (P1.walkRight ? 16 : -16);
 					hazardsY[0] = P1.y;
 				}
+				else if (P1.item == items_bomb) {
+					P1.holding = true;
+					P1.item = items_splosion;
+					
+					if (P1.x+8 > x-8 && P1.y > y-24-16) {
+						P1.palette = 3;
+						P1.splodedTimer = 128;
+						smileScore += 16;
+					}
+					
+					if (P2.x+8 > x-8 && P2.y > y-24-16) {
+						P2.palette = 3;
+						P2.splodedTimer = 128;
+						smileScore += 16;
+					}
+				}
 				sound_play(SOUND_JUMP);
 			}
 		}
@@ -684,6 +699,22 @@ static void handle_input(){
 					hazardsA[0] = true;
 					hazardsX[0] = P2.x + (P2.walkRight ? 16 : -16);
 					hazardsY[0] = P2.y;
+				}
+				else if (P2.item == items_bomb) {
+					P2.holding = true;
+					P2.item = items_splosion;
+					
+					if (P1.x+8 > x-8 && P1.y > y-24-16) {
+						P1.palette = 3;
+						P1.splodedTimer = 128;
+						smileScore += 16;
+					}
+					
+					if (P2.x+8 > x-8 && P2.y > y-24-16) {
+						P2.palette = 3;
+						P2.splodedTimer = 128;
+						smileScore += 16;
+					}
 				}
 				sound_play(SOUND_JUMP);
 			}
