@@ -283,22 +283,26 @@ static void tick_player(){
 	if(player->y > 196) player->y = 196;
 	
 	if(smileScore < 128 || bossStage < 2){
+		// Knock the player back from the clown during the slapstick phase
 		if(player->x > 0xCC && 0x48 < player->y && player->y < 0xA0){
 			player->x -= 16;
 		}
 	} else {
-		if(0x4E < player->y && player->y < 0xA2){
+		if((0x4E < player->y && player->y < 0xA2) || bossStage >= 3){
 			if(player->x > 0xCC){
+				// Check if the player should be behind the mouth
 				if(player->x < 0x118){
 					behind = PX_SPR_BEHIND;
 					player_flags |= PX_SPR_BEHIND;
 				}
 				
+				// line up the player with the mouth
 				if(player->x > 256) player->y = 0x90;
 				if(player->y < 0x90) player->y += 1;
 				if(player->y > 0x90) player->y -= 1;
 			}
 		} else {
+			// Clamp to right edge
 			if(player->x > 220){
 				player->x = 220;
 			}
@@ -631,7 +635,7 @@ static void player_boss_tick(){
 		if(bossStage < 2 && 0xC0 < player->x && 0x80 < player->y && player->y < 0x94){
 			bossHits++;
 			boss_smack = true;
-		} else if(bossStage >= 2 && player->x > 0x11C){
+		} else if(bossStage == 2 && player->x > 0x11C){
 			bossHits++;
 			boss_smack = true;
 		}
@@ -651,9 +655,8 @@ static void boss_loop(){
 		handle_input();
 		boss_smack = false;
 		
-		if(bossStage >= 2){
-			if(PX.scroll_x < 88) PX.scroll_x += 2;
-		}
+		if(bossStage >= 2 && PX.scroll_x < 88) PX.scroll_x += 2;
+		if(bossStage >= 3 && PX.scroll_x < 256) PX.scroll_x += 1;
 		
 		player = &P1;
 		tick_player();
