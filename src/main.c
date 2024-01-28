@@ -277,7 +277,7 @@ static const u8 splosion[] = {
 	-8, -8, 0xD6, 1,
 	 0, -8, 0xD7, 1,
 	 8, -8, 0xD8, 1,
-	 
+
 	-8,  0, 0xE6, 1,
 	 0,  0, 0xE7, 1,
 	 8,  0, 0xE8, 1,
@@ -441,19 +441,18 @@ static void tick_player(){
 		if (px_ticks/8%18 == 17) {
 			player->holding = true;
 			player->item = items_splosion;
-			
+
 			if (P1.x+8 > x-8 && P1.y > y-24-16) {
 				P1.palette = 3;
 				P1.splodedTimer = 128;
 				smileScore += 16;
 			}
-			
+
 			if (P2.x+8 > x-8 && P2.y > y-24-16) {
 				P2.palette = 3;
 				P2.splodedTimer = 128;
 				smileScore += 16;
 			}
-			
 		}
 	}
 
@@ -463,7 +462,7 @@ static void tick_player(){
 			player->holding = false;
 		}
 	}
-	
+
 
 	// TIMERS
 	if (player->hammerHitTimer > 1) {
@@ -483,7 +482,7 @@ static void tick_player(){
 	}
 
 	// ACTIONS
-	if (player->throw) {
+	if (player->throw && player->item != items_splosion) {
 		player->throwFrameTimer -= 1;
 		if (player->throwFrameTimer == 0) {
 			player->throwFrameTimer = 24;
@@ -518,7 +517,7 @@ static void tick_player(){
 				case items_hammer: 	px_spr(x-8, y-24, behind|pickupsP[1], 0xB0); break;
 				case items_pie: 	px_spr(x-8, y-24, pickupsP[2], 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, pickupsP[3], 0xB2); break;
-				case items_bomb: 	
+				case items_bomb:
 					meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]);
 				break;
 				case items_splosion: meta_spr(x, y-24, pickupsP[5], splosion); break;
@@ -529,8 +528,8 @@ static void tick_player(){
 				case items_hammer: 	px_spr(x, y-24, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
 				case items_pie: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xC0); break;
 				case items_banana: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xB2); break;
-				case items_bomb: 	
-					meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); 
+				case items_bomb:
+					meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]);
 				break;
 				case items_splosion: meta_spr(x, y-24, pickupsP[5], splosion); break;
 			}
@@ -610,7 +609,7 @@ static void tick_player(){
 			player->holding = true;
 		}
 	}
-	
+
 	for(idx = 0; idx < HAZARD_COUNT; idx++){
 		switch(hazardsT[idx]){
 			case hazard_peel:
@@ -664,11 +663,25 @@ static void handle_input(){
 					hazardsX[0] = P1.x + (P1.walkRight ? 16 : -16);
 					hazardsY[0] = P1.y;
 				}
+				else if (P1.item == items_bomb) {
+					P1.throw = false;
+					P1.holding = true;
+					P1.item = items_splosion;
+					P1.palette = 3;
+					P1.splodedTimer = 128;
+					smileScore += 16;
+
+					if (P2.x+8 > P1.x-8 && P2.y > P1.y-24-16) {
+						P2.palette = 3;
+						P2.splodedTimer = 128;
+						smileScore += 16;
+					}
+				}
 				else if(P1.item == items_pie){
-					hazardsA[1] = true;
-					hazardsX[1] = P1.x + (P1.walkRight ? 16 : -16);
-					hazardsY[1] = P1.y - 18;
-					hazardsP[1] = 1 | (P1.walkRight ? PX_SPR_FLIPX : 0);
+						hazardsA[1] = true;
+						hazardsX[1] = P1.x + (P1.walkRight ? 16 : -16);
+						hazardsY[1] = P1.y - 18;
+						hazardsP[1] = 1 | (P1.walkRight ? PX_SPR_FLIPX : 0);
 				}
 				sound_play(SOUND_JUMP);
 			}
@@ -697,6 +710,20 @@ static void handle_input(){
 					hazardsA[0] = true;
 					hazardsX[0] = P2.x + (P2.walkRight ? 16 : -16);
 					hazardsY[0] = P2.y;
+				}
+				else if (P2.item == items_bomb) {
+					P2.throw = false;
+					P2.holding = true;
+					P2.item = items_splosion;
+					P2.palette = 3;
+					P2.splodedTimer = 128;
+					smileScore += 16;
+
+					if (P1.x+8 > P2.x-8 && P1.y > P2.y-24-16) {
+						P1.palette = 3;
+						P1.splodedTimer = 128;
+						smileScore += 16;
+					}
 				}
 				else if(P2.item == items_pie){
 					hazardsA[1] = true;
@@ -924,19 +951,19 @@ static void game_loop(void){
 				case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
 			}
 		}
-		
+
 		for (idx = 0; idx < HAZARD_COUNT; idx++) {
 			if(hazardsT[idx] == hazard_pie){
 				hazardsX[idx] -= (hazardsP[idx] & PX_SPR_FLIPX ? -2 : 2);
 				if(hazardsX[idx] < 0x20 || 0xC0 < hazardsX[idx]) hazardsY[idx] = -8;
 			}
-			
+
 			// draw hazards
 			px_spr(hazardsX[idx],hazardsY[idx],hazardsP[idx],hazardsS[idx]);
 		}
 
 		// HAZARDS
-		
+
 
 		//meta_spr(100,100,1,splosion);
 
