@@ -272,7 +272,7 @@ static void tick_player(){
 	
 	if (player->throw) {
 		player->throwFrameTimer -= 1;
-		if (player->throwFrameTimer == 1) {
+		if (player->throwFrameTimer == 0) {
 			player->throwFrameTimer = 24;
 			player->throw = false;
 			player->holding = false;
@@ -564,12 +564,26 @@ static void game_loop(void){
 	game_loop();
 }
 
-static u8 bossStage;
+static u8 bossStage = 0;
+static u8 bossHits;
+static bool boss_smack;
+
+static void player_boss_tick(){
+	player->holding = true;
+	player->item = items_hammer;
+	// Hack the timer to let the player rapidly tap
+	if(player->throwFrameTimer > 6) player->throwFrameTimer = 6;
+	// Even more total hackery with the frame timer here...
+	if(player->throwFrameTimer == 5 && player->walkRight){
+		// px_debug_hex(P1.y);
+		if(0xC0 < player->x && 0x80 < player->y && player->y < 0xA0){
+			bossHits++;
+			boss_smack = true;
+		}
+	}
+}
 
 static void boss_loop(){
-	static u8 bossHits;
-	static bool smack;
-	
 	bossHits = 0;
 	switch(bossStage){
 		case 0: show_smile_and_sync(SMILE_TOOTHY); break;
@@ -579,22 +593,15 @@ static void boss_loop(){
 	
 	while(true){
 		handle_input();
-		smack = false;
-		
-		P1.holding = true;
-		P1.item = items_hammer;
-		// Hack the timer to let the player rapidly tap
-		if(P1.throwFrameTimer > 6) P1.throwFrameTimer = 6;
-		if(JOY_BTN_A(pad1.press)){
-			// px_debug_hex(P1.y);
-			if(0xC0 < P1.x && 0x80 < P1.y && P1.y < 0xA0){
-				bossHits++;
-				smack = true;
-			}
-		}
+		boss_smack = false;
 		
 		player = &P1;
 		tick_player();
+		player_boss_tick();
+		
+		player = &P2;
+		tick_player();
+		player_boss_tick();
 		
 		// px_debug_hex(bossHits);
 		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
@@ -602,7 +609,7 @@ static void boss_loop(){
 		px_spr_end();
 		px_wait_nmi();
 		
-		if(smack){
+		if(boss_smack){
 			px_buffer_set_color(10, 0x06);
 		} else{	
 			px_buffer_set_color(10, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
