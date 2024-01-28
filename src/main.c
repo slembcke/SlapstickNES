@@ -439,8 +439,6 @@ static void tick_player(){
 		if (px_ticks/8%18 == 17) {
 			player->holding = true;
 			player->item = items_splosion;
-			//player->splodedTimer = 128;
-			//smileScore += 16;
 			
 			if (P1.x+8 > x-8 && P1.y > y-24-16) {
 				P1.palette = 3;
