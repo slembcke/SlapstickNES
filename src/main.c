@@ -6,9 +6,9 @@
 
 #define BG_COLOR 0x1D
 static const u8 PALETTE[] = {
-	BG_COLOR, 0x01, 0x11, 0x21,
-	BG_COLOR, 0x27, 0x37, 0x20,
-	BG_COLOR, 0x27, 0x37, 0x20,
+	BG_COLOR, 0x14, 0x24, 0x35,
+	BG_COLOR, 0x16, 0x27, 0x20,
+	BG_COLOR, 0x16, 0x27, 0x20,
 	BG_COLOR, 0x01, 0x11, 0x21,
 	
 	BG_COLOR, 0x18, 0x28, 0x38, // P1, BANANA
@@ -289,12 +289,14 @@ static void tick_player(){
 	} else {
 		if(0x4E < player->y && player->y < 0xA2){
 			if(player->x > 0xCC){
-				behind = PX_SPR_BEHIND;
-				player_flags |= PX_SPR_BEHIND;
-				if(player->y < 0x90) player->y += 1;
-				if(player->y > 0x90) player->y -= 1;
+				if(player->x < 0x118){
+					behind = PX_SPR_BEHIND;
+					player_flags |= PX_SPR_BEHIND;
+				}
 				
 				if(player->x > 256) player->y = 0x90;
+				if(player->y < 0x90) player->y += 1;
+				if(player->y > 0x90) player->y -= 1;
 			}
 		} else {
 			if(player->x > 220){
@@ -604,8 +606,8 @@ static void player_boss_tick(){
 	// Hack the timer to let the player rapidly tap
 	if(player->throwFrameTimer > 6) player->throwFrameTimer = 6;
 	
-	// px_debug_hex_addr = NT_ADDR(0, 16, 2);
-	// px_debug_hex(P1.y);
+	px_debug_hex_addr = NT_ADDR(0, 16, 2);
+	px_debug_hex(P1.x);
 	
 	// Even more total hackery with the frame timer here...
 	if(player->throwFrameTimer == 5 && player->walkRight){
@@ -613,7 +615,9 @@ static void player_boss_tick(){
 		if(bossStage < 2 && 0xC0 < player->x && 0x80 < player->y && player->y < 0x94){
 			bossHits++;
 			boss_smack = true;
-		} else if(bossStage >= 2){
+		} else if(bossStage >= 2 && player->x > 0x11C){
+			bossHits++;
+			boss_smack = true;
 		}
 	}
 }
@@ -638,11 +642,10 @@ static void boss_loop(){
 		tick_player();
 		player_boss_tick();
 		
-		// player = &P2;
-		// tick_player();
-		// player_boss_tick();
+		player = &P2;
+		tick_player();
+		player_boss_tick();
 		
-		// px_debug_hex(bossHits);
 		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
 		
 		px_spr_end();
