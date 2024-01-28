@@ -491,13 +491,20 @@ static void game_loop(void){
 	game_loop();
 }
 
+static const SMILE1[] = {0x1};
+
 static void boss_loop(){
 	static u8 boss_hits;
+	static bool smack;
 	
 	boss_hits = 0;
 	
+	px_buffer_blit(0x2A3A, SMILE1, 1);
+	px_wait_nmi();
+	
 	while(true){
 		handle_input();
+		smack = false;
 		
 		P1.holding = true;
 		P1.item = items_hammer;
@@ -507,20 +514,31 @@ static void boss_loop(){
 			// px_debug_hex(P1.y);
 			if(0xC0 < P1.x && 0x80 < P1.y && P1.y < 0xA0){
 				boss_hits++;
+				smack = true;
 			}
 		}
 		
 		player = &P1;
 		tick_player();
 		
-		px_debug_hex(boss_hits);
+		// px_debug_hex(boss_hits);
 		px_buffer_blit(NT_ADDR(0, 3, 3), "BOSS", 4);
 		
 		px_spr_end();
 		px_wait_nmi();
 		
+		if(smack){
+			px_buffer_set_color(7, 0x06);
+		} else{	
+			px_buffer_set_color(7, ((px_ticks & 8) == 0) ? 0x3C : 0x36);
+		}
+		
+		px_debug_hex((px_ticks & 1) == 0);
 		if(boss_hits > 32) break;
 	}
+	
+	px_buffer_set_color(7, PALETTE[7]);
+	px_wait_nmi();
 }
 
 void main(void){
