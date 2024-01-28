@@ -14,7 +14,7 @@ static const u8 PALETTE[] = {
 	BG_COLOR, 0x18, 0x28, 0x38, // P1, BANANA
 	BG_COLOR, 0x3d, 0x27, 0x30, // HAMMER, PIE, BOMB
 	BG_COLOR, 0x1c, 0x2c, 0x3c,	// P2,
-	BG_COLOR, 0x01, 0x11, 0x21,
+	BG_COLOR, 0x2d, 0x3d, 0x00, // BURNT
 };
 
 Gamepad pad1, pad2;
@@ -273,6 +273,21 @@ static const u8 airPuff_F3[] = {
 	128,
 };
 
+static const u8 splosion[] = {
+	-8, -8, 0xD6, 1,
+	 0, -8, 0xD7, 1,
+	 8, -8, 0xD8, 1,
+	 
+	-8,  0, 0xE6, 1,
+	 0,  0, 0xE7, 1,
+	 8,  0, 0xE8, 1,
+
+	-8,  8, 0xF6, 1,
+	 0,  8, 0xf7, 1,
+	 8,  8, 0xf8, 1,
+	 128,
+};
+
 static const u8* anim_AIR_PUFF[] = {
 	airPuff_F1,
 	airPuff_F2,
@@ -339,6 +354,7 @@ enum {
 	items_pie,
 	items_banana,
 	items_bomb,
+	items_splosion,
 	hazard_peel,
 };
 
@@ -363,6 +379,7 @@ typedef struct {
 	u8 throwFrameTimer, item;
 	u8 pieFaceTimer, bananaSlipTimer;
 	u8 panHitTimer, hammerHitTimer;
+	u8 splodedTimer;
 	u8 palette_base;
 	u8 palette;
 } Player;
@@ -416,6 +433,49 @@ static void tick_player(){
 
 	x = (u16)player->x - PX.scroll_x, y = player->y;
 
+	// ITEMS
+	if (player->item == items_bomb) {
+		if (px_ticks/8%18 == 17) {
+			player->holding = true;
+			player->item = items_splosion;
+			// player->splodedTimer = 128;
+			if (P1.x+8 > x-8 && P1.x-24 < x+16 && P1.y > y-24+8 && P1.y < y-24-16) {
+				P1.palette = 3;
+				P1.splodedTimer = 128;
+			}
+			if (P2.x > x-8 && P2.x < x+16 && P2.y > y-24+8 && P2.y < y-24-16) {
+				P2.palette = 3;
+				P1.splodedTimer = 128;
+			}
+		}
+	}
+
+	if (player-> item == items_splosion) {
+		if (player->splodedTimer <= 116) {
+			player->item = items_none;
+			player->holding = false;
+		}
+	}
+	
+
+	// TIMERS
+	if (player->hammerHitTimer > 1) {
+		player->palette = 1;
+		player->hammerHitTimer -= 1;
+		if (player->hammerHitTimer == 1) {
+			player->palette = player->palette_base;
+		}
+	}
+
+	if (player->splodedTimer > 1) {
+		player->palette = 3;
+		player->splodedTimer -= 1;
+		if (player->splodedTimer == 1) {
+			player->palette = player->palette_base;
+		}
+	}
+
+	// ACTIONS
 	if (player->throw) {
 		player->throwFrameTimer -= 1;
 		if (player->throwFrameTimer == 0) {
@@ -426,14 +486,7 @@ static void tick_player(){
 		}
 	}
 
-	if (player->hammerHitTimer > 1) {
-		player->palette = 1;
-		player->hammerHitTimer -= 1;
-		if (player->hammerHitTimer == 1) {
-			player->palette = player->palette_base;
-		}
-	}
-
+	// GRAPHICS
 	if (player->throw) {
 		if (player->walkRight) {
 			switch (player->item) {
@@ -458,7 +511,10 @@ static void tick_player(){
 				case items_hammer: 	px_spr(x-8, y-24, behind|pickupsP[1], 0xB0); break;
 				case items_pie: 	px_spr(x-8, y-24, pickupsP[2], 0xC0); break;
 				case items_banana: 	px_spr(x-8, y-24, pickupsP[3], 0xB2); break;
-				case items_bomb: 	meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
+				case items_bomb: 	
+					meta_spr(x-8, y-24, pickupsP[4], anim_BOMB_burn_DOWN[px_ticks/8%18]);
+				break;
+				case items_splosion: meta_spr(x, y-24, pickupsP[5], splosion); break;
 			}
 		}
 		else {
@@ -466,7 +522,10 @@ static void tick_player(){
 				case items_hammer: 	px_spr(x, y-24, behind|pickupsP[1]|PX_SPR_FLIPX, 0xB0); break;
 				case items_pie: 	px_spr(x, y-24, pickupsP[2]|PX_SPR_FLIPX, 0xC0); break;
 				case items_banana: 	px_spr(x, y-24, pickupsP[3]|PX_SPR_FLIPX, 0xB2); break;
-				case items_bomb: 	meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); break;
+				case items_bomb: 	
+					meta_spr(x, y-24, pickupsP[4]|PX_SPR_FLIPX, anim_BOMB_burn_DOWN[px_ticks/8%18]); 
+				break;
+				case items_splosion: meta_spr(x, y-24, pickupsP[5], splosion); break;
 			}
 		}
 	}
@@ -563,7 +622,7 @@ static void handle_input(){
 	if(JOY_DOWN (pad1.value)) { P1.y += 1; P1.walking = true; }
 	if(JOY_UP   (pad1.value)) { P1.y -= 1; P1.walking = true; }
 	if(JOY_BTN_A(pad1.press)) {
-		if (P1.holding) {
+		if (P1.holding && P1.item != items_splosion) {
 			P1.throw = true;
 			if (P1.item == items_hammer) {
 				if (abs((s16)P1.x-(s16)P2.x) <= 24 && abs((s16)P1.y-(s16)P2.y) <= 24) {
@@ -585,7 +644,7 @@ static void handle_input(){
 	if(JOY_DOWN (pad2.value)) { P2.y += 1; P2.walking = true; }
 	if(JOY_UP   (pad2.value)) { P2.y -= 1; P2.walking = true; }
 	if(JOY_BTN_A(pad2.press)) {
-		if (P2.holding) {
+		if (P2.holding && P2.item != items_splosion) {
 			P2.throw = true;
 			if (P2.item == items_hammer) {
 				if (abs((s16)P2.x-(s16)P1.x) <= 24 && abs((s16)P2.y-(s16)P1.y) <= 24) {
@@ -748,6 +807,12 @@ static void game_loop(void){
 	pickupsP[4] = 1;
 	pickupsR[4] = 0;
 
+	pickupsT[5] = items_splosion;
+	pickupsX[5] = 0;
+	pickupsY[5] = 0;
+	pickupsP[5] = 1;
+	pickupsR[5] = 0;
+
 	hazardsT[0] = hazard_peel;
 	hazardsX[0] = -8;
 	hazardsY[0] = -8;
@@ -771,7 +836,7 @@ static void game_loop(void){
 		PX.scroll_x = 0;
 		handle_input();
 
-		px_profile_start();
+		//px_profile_start();
 		player = &P1;
 		tick_player();
 
@@ -779,7 +844,7 @@ static void game_loop(void){
 		tick_player();
 		// px_profile_end();
 
-		for (idx = 0; idx < 4; idx++) {
+		for (idx = 1; idx < 5; idx++) {
 			if (pickupsR[idx] > 1) {
 				pickupsR[idx] -= 1;
 			}
@@ -799,9 +864,14 @@ static void game_loop(void){
 				case items_hammer : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB0); break;
 				case items_pie : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC0); break;
 				case items_banana : px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xB2); break;
-				case items_bomb : 	px_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],0xC4); break;
+				case items_bomb : 	meta_spr(pickupsX[idx],pickupsY[idx],pickupsP[idx],BOMB_F2); break;
 			}
 		}
+
+		// HAZARDS
+		
+
+		//meta_spr(100,100,1,splosion);
 
 		draw_humor_bar();
 
@@ -873,7 +943,7 @@ static void boss_loop(){
 		tick_player();
 		player_boss_tick();
 
-		if (frame < 8) {
+		if (frame < 8 && bossStage < 2) {
 			switch (px_ticks/8%3) {
 			case 0:
 				if (player->x > 200-PX.scroll_x-8 && player->y > 96 && player->y < 148) {
@@ -897,7 +967,7 @@ static void boss_loop(){
 		tick_player();
 		player_boss_tick();
 
-		if (frame < 8) {
+		if (frame < 8 && bossStage < 2) {
 			switch (px_ticks/8%3) {
 			case 0:
 				if (player->x > 200-PX.scroll_x-8 && player->y > 96 && player->y < 148) {
