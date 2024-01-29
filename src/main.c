@@ -900,14 +900,14 @@ static void draw_humor_bar(){
 
 static void draw_hit_bar(){
 	// gotta get this done!
-	if(bossHits < 8*4) px_spr(168 + 0*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 7*4) px_spr(168 + 1*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 6*4) px_spr(168 + 2*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 5*4) px_spr(168 + 3*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 4*4) px_spr(168 + 4*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 3*4) px_spr(168 + 5*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 2*4) px_spr(168 + 6*8 - PX.scroll_x, 14, 0, 0xB3);
-	if(bossHits < 1*4) px_spr(168 + 7*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 8*2) px_spr(168 + 0*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 7*2) px_spr(168 + 1*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 6*2) px_spr(168 + 2*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 5*2) px_spr(168 + 3*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 4*2) px_spr(168 + 4*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 3*2) px_spr(168 + 5*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 2*2) px_spr(168 + 6*8 - PX.scroll_x, 14, 0, 0xB3);
+	if(bossHits < 1*2) px_spr(168 + 7*8 - PX.scroll_x, 14, 0, 0xB3);
 }
 
 static void draw_score(u8 nt, u16 score1, u16 score2){
