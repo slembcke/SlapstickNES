@@ -11,6 +11,7 @@ D-pad to move and A to use an item.
 # Credits
 
 Developed by: Samuel Miller and Scott Lembcke for the Global Game Jam 2024
+Music is "Danger Streets" by Shiru
 
 Tools Used:
 * Paint.NET (pixel art)
