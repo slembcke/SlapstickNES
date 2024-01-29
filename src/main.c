@@ -855,6 +855,29 @@ static void draw_hit_bar(){
 	if(bossHits < 1*4) px_spr(168 + 7*8 - PX.scroll_x, 22, 0, 0xB3);
 }
 
+static void draw_score(u8 nt, u16 score1, u16 score2){
+	px_debug_hex_addr = NT_ADDR(0, 5, 2);
+	px_debug_hex(score1);
+	
+	px_debug_hex_addr = NT_ADDR(0, 5, 3);
+	px_debug_hex(score2);
+	
+	// static num;
+	
+	// px_buffer_data(4, NT_ADDR(0, 5, 2));
+	// num = score1;
+	// PX.buffer[0] = '0' + num%10; num /= 10;
+	// PX.buffer[1] = '0' + num%10; num /= 10;
+	// PX.buffer[2] = '0' + num%10; num /= 10;
+	// PX.buffer[3] = '0' + num%10; num /= 10;
+	
+	// px_buffer_data(4, NT_ADDR(0, 5, 3));
+	// PX.buffer[0] = '0' + score2/   1%10;
+	// PX.buffer[1] = '0' + score2/  10%10;
+	// PX.buffer[2] = '0' + score2/ 100%10;
+	// PX.buffer[3] = '0' + score2/1000%10;
+}
+
 static void boss_loop(void);
 
 static void game_loop(void){
@@ -988,6 +1011,7 @@ static void game_loop(void){
 		}
 
 		draw_humor_bar();
+		draw_score(0, 0x2345, 0x5678);
 
 		px_spr_end();
 		px_wait_nmi();
