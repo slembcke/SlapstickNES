@@ -1096,10 +1096,12 @@ static void player_boss_tick(){
 		if(bossStage < 2 && 0xC0 < player->x && 0x80 < player->y && player->y < 0x94){
 			bossHits++;
 			boss_smack = true;
+			player->score += 16;
 		}
 		else if(bossStage >= 2 && player->x > 0x11C){
 			bossHits++;
 			boss_smack = true;
+			player->score += 16;
 		}
 	}
 }
