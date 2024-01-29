@@ -370,15 +370,18 @@ static u8 pickupsS[5];
 static u8 hazardsT[HAZARD_COUNT]; // type
 static u8 hazardsX[HAZARD_COUNT];
 static u8 hazardsY[HAZARD_COUNT];
+static u8 hazardsE[HAZARD_COUNT];
 static u8 hazardsS[HAZARD_COUNT]; // sprite
 static u8 hazardsP[HAZARD_COUNT]; // palette
 static u8 hazardsA[HAZARD_COUNT]; // active
 
 typedef struct {
 	u16 x, y;
+	bool iamplayer1;
 	bool walking, walkRight;
 	bool holding, throw;
 	bool slipping;
+	u8 score;
 	u8 throwFrameTimer, item;
 	u8 pieFaceTimer;
 	u8 panHitTimer, hammerHitTimer;
@@ -626,7 +629,24 @@ static void tick_player(){
 					hazardsX[idx] = -8;
 					hazardsY[idx] = -8;
 					smileScore += 16;
-			
+
+					if (hazardsE[idx] == player->iamplayer1) {
+						if (player->iamplayer1) {
+							P2.score += 16;
+						}
+						else {
+							P1.score += 16;
+						}
+					}
+					else {
+						if (player->iamplayer1) {
+							P1.score += 16;
+						}
+						else {
+							P2.score += 16;
+						}
+					}
+
 					sound_play(SOUND_DROP);
 				}
 				break;
@@ -637,6 +657,23 @@ static void tick_player(){
 					hazardsX[idx] = -8;
 					hazardsY[idx] = -8;
 					smileScore += 16;
+
+					if (hazardsE[idx] == player->iamplayer1) {
+						if (player->iamplayer1) {
+							P2.score += 16;
+						}
+						else {
+							P1.score += 16;
+						}
+					}
+					else {
+						if (player->iamplayer1) {
+							P1.score += 16;
+						}
+						else {
+							P2.score += 16;
+						}
+					}
 			
 					sound_play(SOUND_DROP);
 				}
@@ -667,11 +704,13 @@ static void handle_input(){
 					if (abs((s16)P1.x-(s16)P2.x) <= 24 && abs((s16)P1.y-(s16)P2.y) <= 24) {
 						P2.hammerHitTimer = 24;
 						smileScore += 16;
+						P1.score += 16;
 						sound_play(SOUND_DROP);
 					}
 				}
 				else if (P1.item == items_banana) {
 					hazardsA[0] = true;
+					hazardsE[0] = P1.iamplayer1;
 					hazardsX[0] = P1.x + (P1.walkRight ? 16 : -16);
 					hazardsY[0] = P1.y;
 				}
@@ -682,16 +721,19 @@ static void handle_input(){
 					P1.palette = 3;
 					P1.splodedTimer = 128;
 					smileScore += 16;
+					P1.score += 16;
 
 					if (abs(P1.x-P2.x) < 12 && abs(P1.y-P2.y) < 12) {
 						P2.palette = 3;
 						P2.splodedTimer = 128;
+						P1.score += 16;
 						smileScore += 16;
 					}
 					sound_play(SOUND_DROP);
 				}
 				else if(P1.item == items_pie) {
 						hazardsA[1] = true;
+						hazardsE[1] = P1.iamplayer1;
 						hazardsX[1] = P1.x + (P1.walkRight ? 16 : -16);
 						hazardsY[1] = P1.y - 18;
 						hazardsP[1] = 1 | (P1.walkRight ? PX_SPR_FLIPX : 0);
@@ -717,11 +759,13 @@ static void handle_input(){
 					if (abs((s16)P2.x-(s16)P1.x) <= 24 && abs((s16)P2.y-(s16)P1.y) <= 24) {
 						P1.hammerHitTimer = 24;
 						smileScore += 16;
+						P2.score += 16;
 						sound_play(SOUND_DROP);
 					}
 				}
 				else if (P2.item == items_banana) {
 					hazardsA[0] = true;
+					hazardsE[0] = P2.iamplayer1;
 					hazardsX[0] = P2.x + (P2.walkRight ? 16 : -16);
 					hazardsY[0] = P2.y;
 				}
@@ -732,16 +776,19 @@ static void handle_input(){
 					P2.palette = 3;
 					P2.splodedTimer = 128;
 					smileScore += 16;
+					P2.score += 16;
 
 					if (abs(P2.x-P1.x) < 12 && abs(P2.y-P1.y) < 12) {
 						P1.palette = 3;
 						P1.splodedTimer = 128;
 						smileScore += 16;
+						P2.score += 16;
 					}
 					sound_play(SOUND_DROP);
 				}
 				else if(P2.item == items_pie){
 					hazardsA[1] = true;
+					hazardsE[1] = P1.iamplayer1;
 					hazardsX[1] = P2.x + (P2.walkRight ? 16 : -16);
 					hazardsY[1] = P2.y - 18;
 					hazardsP[1] = 1 | (P2.walkRight ? PX_SPR_FLIPX : 0);
@@ -878,11 +925,13 @@ static void game_loop(void){
 	rand_seed = 8347;
 	
 	P1.x = 128, P1.y = 128;
+	P1.iamplayer1 = true;
 	P1.throwFrameTimer = 24;
 	P1.palette_base = 0;
 	P1.palette = 0;//P1.palette_base;
 
 	P2.x = 96, P2.y = 128;
+	P2.iamplayer1 = false;
 	P2.throwFrameTimer = 24;
 	P2.palette_base = 2;
 	P2.palette = 2;//P2.palette_base;
