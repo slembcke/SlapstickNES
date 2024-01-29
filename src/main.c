@@ -912,14 +912,14 @@ static void draw_hit_bar(){
 
 static void draw_score(u8 nt, u16 score1, u16 score2){
 	static num;
-	px_buffer_data(4, NT_ADDR(0, 5, 2));
+	px_buffer_data(4, NT_ADDR(nt, 5, 2));
 	num = score1;
 	PX.buffer[3] = '0' + num%10; num /= 10;
 	PX.buffer[2] = '0' + num%10; num /= 10;
 	PX.buffer[1] = '0' + num%10; num /= 10;
 	PX.buffer[0] = '0' + num%10; num /= 10;
 
-	px_buffer_data(4, NT_ADDR(0, 5, 3));
+	px_buffer_data(4, NT_ADDR(nt, 5, 3));
 	num = score2;
 	PX.buffer[3] = '0' + num%10; num /= 10;
 	PX.buffer[2] = '0' + num%10; num /= 10;
@@ -1182,6 +1182,8 @@ static void boss_loop(){
 		}
 
 		draw_hit_bar();
+		draw_score(1, P1.score, P2.score);
+		
 		px_spr_end();
 		px_wait_nmi();
 
