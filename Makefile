@@ -32,7 +32,7 @@ CHR = \
 	chr/smchr.png \
 
 SONGS = \
-	audio/after_the_rain.txt \
+	audio/danger_streets.txt \
 
 default: $(ROM)
 rom: $(ROM)

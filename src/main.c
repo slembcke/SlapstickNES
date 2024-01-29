@@ -1217,7 +1217,7 @@ void main(void){
 
 	sound_init(&SOUNDS);
 	music_init(&MUSIC);
-	// music_play(&MUSIC);
+	music_play(&MUSIC);
 
 	// Jump to the splash screen state.
 	game_loop();
