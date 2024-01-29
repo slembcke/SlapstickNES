@@ -381,7 +381,7 @@ typedef struct {
 	bool walking, walkRight;
 	bool holding, throw;
 	bool slipping;
-	u8 score;
+	u16 score;
 	u8 throwFrameTimer, item;
 	u8 pieFaceTimer;
 	u8 panHitTimer, hammerHitTimer;
@@ -447,18 +447,26 @@ static void tick_player(){
 			player->palette = 3;
 			player->splodedTimer = 128;
 			smileScore += 16;
+			player->score += 16;
 
-			if (abs(P1.x-x) < 12 && abs(P1.y-y) < 12) {
-				P1.palette = 3;
-				P1.splodedTimer = 128;
-				smileScore += 16;
+			if (player->iamplayer1) {
+				if (abs(P2.x-x) < 12 && abs(P2.y-y) < 12) {
+					P2.palette = 3;
+					P2.splodedTimer = 128;
+					smileScore += 16;
+					P1.score += 16;
+				}
+			}
+			else {
+				if (abs(P1.x-x) < 12 && abs(P1.y-y) < 12) {
+					P1.palette = 3;
+					P1.splodedTimer = 128;
+					smileScore += 16;
+					P2.score += 16;
+				}
 			}
 
-			if (abs(P2.x-x) < 12 && abs(P2.y-y) < 12) {
-				P2.palette = 3;
-				P2.splodedTimer = 128;
-				smileScore += 16;
-			}
+			
 			
 			sound_play(SOUND_DROP);
 		}
@@ -599,7 +607,7 @@ static void tick_player(){
 		}
 	}
 
-// super rushed hack:
+	// super rushed hack:
 	// reach into sprite memory and squish existing sprites down when hammered
 	if(player->palette == 1){
 		(OAM - 12)[px_sprite_cursor] += 4;
@@ -640,10 +648,10 @@ static void tick_player(){
 					}
 					else {
 						if (player->iamplayer1) {
-							P1.score += 16;
+							P2.score += 16;
 						}
 						else {
-							P2.score += 16;
+							P1.score += 16;
 						}
 					}
 
@@ -660,18 +668,18 @@ static void tick_player(){
 
 					if (hazardsE[idx] == player->iamplayer1) {
 						if (player->iamplayer1) {
-							P2.score += 16;
+							P1.score += 16;
 						}
 						else {
-							P1.score += 16;
+							P2.score += 16;
 						}
 					}
 					else {
 						if (player->iamplayer1) {
-							P1.score += 16;
+							P2.score += 16;
 						}
 						else {
-							P2.score += 16;
+							P1.score += 16;
 						}
 					}
 			
@@ -788,7 +796,7 @@ static void handle_input(){
 				}
 				else if(P2.item == items_pie){
 					hazardsA[1] = true;
-					hazardsE[1] = P1.iamplayer1;
+					hazardsE[1] = P2.iamplayer1;
 					hazardsX[1] = P2.x + (P2.walkRight ? 16 : -16);
 					hazardsY[1] = P2.y - 18;
 					hazardsP[1] = 1 | (P2.walkRight ? PX_SPR_FLIPX : 0);
@@ -1054,7 +1062,7 @@ static void game_loop(void){
 		}
 
 		draw_humor_bar();
-		draw_score(0, 2345, 5678);
+		draw_score(0, P1.score, P2.score);
 
 		px_spr_end();
 		px_wait_nmi();
@@ -1217,7 +1225,7 @@ void main(void){
 
 	sound_init(&SOUNDS);
 	music_init(&MUSIC);
-	// music_play(&MUSIC);
+// music_play(&MUSIC);
 
 	// Jump to the splash screen state.
 	game_loop();
