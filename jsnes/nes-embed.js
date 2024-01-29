@@ -56,24 +56,18 @@ function audio_callback(event){
 function keyboard(callback, event){
 	var player = 1;
 	switch(event.keyCode){
-		case 38: // UP
-			callback(player, jsnes.Controller.BUTTON_UP); break;
-		case 40: // Down
-			callback(player, jsnes.Controller.BUTTON_DOWN); break;
-		case 37: // Left
-			callback(player, jsnes.Controller.BUTTON_LEFT); break;
-		case 39: // Right
-			callback(player, jsnes.Controller.BUTTON_RIGHT); break;
-		case 65: // 'a' - qwerty, dvorak
-		case 81: // 'q' - azerty
-			callback(player, jsnes.Controller.BUTTON_A); break;
-		case 83: // 's' - qwerty, azerty
-		case 79: // 'o' - dvorak
-			callback(player, jsnes.Controller.BUTTON_B); break;
-		case 9: // Tab
-			callback(player, jsnes.Controller.BUTTON_SELECT); break;
-		case 13: // Return
-			callback(player, jsnes.Controller.BUTTON_START); break;
+		case 0x57: callback(1, jsnes.Controller.BUTTON_UP); break;
+		case 0x53: callback(1, jsnes.Controller.BUTTON_DOWN); break;
+		case 0x41: callback(1, jsnes.Controller.BUTTON_LEFT); break;
+		case 0x44: callback(1, jsnes.Controller.BUTTON_RIGHT); break;
+		case 0x46: callback(1, jsnes.Controller.BUTTON_A); break;
+
+		case 0x26: callback(2, jsnes.Controller.BUTTON_UP); break;
+		case 0x28: callback(2, jsnes.Controller.BUTTON_DOWN); break;
+		case 0x25: callback(2, jsnes.Controller.BUTTON_LEFT); break;
+		case 0x27: callback(2, jsnes.Controller.BUTTON_RIGHT); break;
+		case 0x20: callback(2, jsnes.Controller.BUTTON_A); break;
+		
 		default: break;
 	}
 }
