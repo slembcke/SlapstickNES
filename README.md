@@ -1,5 +1,7 @@
 # Slapstick NES
 
+![Slapstick Screenshot](media/slapstick-1.png)
+
 A 2 player NES Slapstick game about pratfalls, banana peels, and mallets!
 
 As your final task to graduate from clown school, you must make the head clown laugh. You know your craft. You can do this!
@@ -28,3 +30,5 @@ Tools Used:
 * VSCode (IDE)
 * Mesen (emulator)
 * Everdrive (hardware)
+
+![32KB ROM visualization](slapstick-romviz.png)
